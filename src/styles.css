@@ -100,7 +100,7 @@ textarea:focus-visible {
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
-  color: #bf1f2e;
+  color: #0f766e;
 }
 
 .brand-mark svg {
@@ -250,7 +250,7 @@ h1 {
 }
 
 .auth-panel {
-  width: min(520px, 100%);
+  width: min(680px, 100%);
   display: grid;
   gap: 18px;
   border: 1px solid #d8dfd3;
@@ -265,6 +265,18 @@ h1 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.auth-panel-header > div {
+  min-width: 0;
+}
+
+.auth-title {
+  max-width: none;
+  font-size: clamp(1.6rem, 5vw, 2.85rem);
+  line-height: 0.98;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .auth-tabs {

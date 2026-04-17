@@ -1940,7 +1940,9 @@ function AuthScreen({
         <div className="auth-panel-header">
           <div>
             <p className="eyebrow">{t.eyebrow}</p>
-            <h1 id="auth-title">{t.appName}</h1>
+            <h1 id="auth-title" className="auth-title">
+              {t.appName}
+            </h1>
           </div>
           <button type="button" className="icon-button" onClick={onClose} aria-label={t.closeLogin}>
             x
