@@ -18,6 +18,8 @@ type MaterialStatus = "未开始" | "准备中" | "已提交" | "需补充";
 type Priority = "高" | "中" | "低";
 type BoardView = "all" | "upcoming" | "active" | "offer";
 type AuthMode = "login" | "register";
+type Language = "zh" | "en";
+type ThemeMode = "system" | "light" | "dark";
 
 type MaterialItem = {
   id: string;
@@ -54,6 +56,8 @@ type ApplicationForm = Omit<JobApplication, "id">;
 const STORAGE_KEY = "campus-application-board-v1";
 const AUTH_USERS_KEY = "campus-application-board-users-v1";
 const AUTH_SESSION_KEY = "campus-application-board-session-v1";
+const LANGUAGE_KEY = "campus-application-board-language-v1";
+const THEME_KEY = "campus-application-board-theme-v1";
 const DETAIL_HASH_PREFIX = "#application-";
 
 type StoredUser = {
@@ -66,6 +70,205 @@ type AuthForm = {
   name: string;
   email: string;
   password: string;
+};
+
+const copy = {
+  zh: {
+    appName: "求职申请管理看板",
+    eyebrow: "校园招聘",
+    subtitle: "统一管理岗位截止日期、材料状态和面试进度。",
+    language: "语言",
+    theme: "主题",
+    system: "跟随系统",
+    light: "浅色",
+    dark: "深色",
+    login: "登录",
+    logout: "退出登录",
+    guest: "访客",
+    addApplication: "新增申请",
+    calendar: "添加到日历",
+    overviewLabel: "求职申请概览",
+    boardActions: "看板操作",
+    totalApplications: "申请总数",
+    upcomingDeadlines: "即将截止",
+    inProgress: "推进中",
+    offers: "录用",
+    showAll: "显示全部",
+    filterUpcoming: "筛选即将截止",
+    search: "搜索",
+    searchPlaceholder: "公司、岗位、进度或备注",
+    priority: "优先级",
+    materialStatus: "材料状态",
+    all: "全部",
+    sortByDeadline: "按截止日期排序",
+    backToBoardView: "返回状态看板",
+    currentPage: "当前页面",
+    backToAll: "返回全部",
+    deadlineSortTitle: "按截止日期排序",
+    statusBoardLabel: "申请状态看板",
+    noMatchedApplications: "暂无符合条件的申请",
+    noStatusApplicationsPrefix: "暂无",
+    noStatusApplicationsSuffix: "申请",
+    dragToColumn: "拖拽到其他状态列",
+    deadline: "截止日期",
+    progress: "当前进度",
+    notes: "备注",
+    noNotes: "暂无备注",
+    movePrevious: "前移",
+    moveNext: "后移",
+    edit: "编辑",
+    delete: "删除",
+    backToBoard: "返回看板",
+    detailLabel: "申请详情",
+    progressInfo: "进度信息",
+    materialsChecklist: "申请材料 checklist",
+    interviewProcess: "面试流程",
+    detailActions: "详情操作",
+    result: "结果",
+    notScheduled: "未安排",
+    pendingUpdate: "待更新",
+    formLabel: "申请表单",
+    createRecord: "新增岗位",
+    updateRecord: "更新记录",
+    editApplication: "编辑申请",
+    companyName: "公司名称",
+    companyPlaceholder: "例如：阿里巴巴",
+    roleName: "岗位名称",
+    rolePlaceholder: "例如：数据分析实习生",
+    currentStatus: "当前状态",
+    progressPlaceholder: "例如：等待 HR 电话面试",
+    addCustomMaterial: "添加自定义材料",
+    add: "添加",
+    remove: "移除",
+    time: "时间",
+    resultPlaceholder: "例如：通过 / 待参加 / 未通过",
+    processNotesPlaceholder: "记录准备重点、面试反馈或后续事项",
+    notesPlaceholder: "记录材料补充、面试准备或跟进事项",
+    cancel: "取消",
+    saveApplication: "保存申请",
+    closeForm: "关闭表单",
+    closeLogin: "关闭登录",
+    register: "注册",
+    nickname: "昵称",
+    nicknamePlaceholder: "例如：小徐",
+    email: "邮箱",
+    password: "密码",
+    passwordPlaceholder: "请输入密码",
+    registerAndEnter: "注册并进入",
+    guestLogin: "访客登录",
+    authSubtitle: "登录后管理岗位、DDL、面试流程和日历提醒。",
+    authModeLabel: "登录方式",
+    authNote: "当前版本使用浏览器本地登录，数据保存在这台设备的 localStorage。",
+    fillAllFields: "请填写完整信息。",
+    emailRegistered: "这个邮箱已经注册，请直接登录。",
+    wrongCredentials: "邮箱或密码不正确。",
+    calendarFeedbackPrefix: "已打开",
+    calendarFeedbackSuffix: "个日历事件。若浏览器未弹出日历，请在下载记录中打开 .ics 文件导入。",
+  },
+  en: {
+    appName: "Job Application Board",
+    eyebrow: "Campus Recruiting",
+    subtitle: "Track deadlines, materials, and interview progress in one place.",
+    language: "Language",
+    theme: "Theme",
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+    login: "Sign in",
+    logout: "Sign out",
+    guest: "Guest",
+    addApplication: "Add Application",
+    calendar: "Add to Calendar",
+    overviewLabel: "Application Overview",
+    boardActions: "Board Actions",
+    totalApplications: "Total",
+    upcomingDeadlines: "Due Soon",
+    inProgress: "In Progress",
+    offers: "Offers",
+    showAll: "Show All",
+    filterUpcoming: "Due Soon",
+    search: "Search",
+    searchPlaceholder: "Company, role, progress, or notes",
+    priority: "Priority",
+    materialStatus: "Materials",
+    all: "All",
+    sortByDeadline: "Sort by Deadline",
+    backToBoardView: "Back to Board",
+    currentPage: "Current View",
+    backToAll: "Back to All",
+    deadlineSortTitle: "Sorted by Deadline",
+    statusBoardLabel: "Application Status Board",
+    noMatchedApplications: "No matching applications",
+    noStatusApplicationsPrefix: "No",
+    noStatusApplicationsSuffix: "applications",
+    dragToColumn: "Drag to another status column",
+    deadline: "Deadline",
+    progress: "Progress",
+    notes: "Notes",
+    noNotes: "No notes",
+    movePrevious: "Previous",
+    moveNext: "Next",
+    edit: "Edit",
+    delete: "Delete",
+    backToBoard: "Back to Board",
+    detailLabel: "Application Details",
+    progressInfo: "Progress Details",
+    materialsChecklist: "Materials Checklist",
+    interviewProcess: "Interview Process",
+    detailActions: "Detail Actions",
+    result: "Result",
+    notScheduled: "Not scheduled",
+    pendingUpdate: "Pending update",
+    formLabel: "Application Form",
+    createRecord: "New Role",
+    updateRecord: "Update Record",
+    editApplication: "Edit Application",
+    companyName: "Company",
+    companyPlaceholder: "e.g. Alibaba",
+    roleName: "Role",
+    rolePlaceholder: "e.g. Data Analyst Intern",
+    currentStatus: "Current Status",
+    progressPlaceholder: "e.g. Waiting for HR phone screen",
+    addCustomMaterial: "Add custom material",
+    add: "Add",
+    remove: "Remove",
+    time: "Date",
+    resultPlaceholder: "e.g. Passed / Pending / Rejected",
+    processNotesPlaceholder: "Preparation notes, interview feedback, or follow-up items",
+    notesPlaceholder: "Materials, interview prep, or follow-up notes",
+    cancel: "Cancel",
+    saveApplication: "Save Application",
+    closeForm: "Close form",
+    closeLogin: "Close sign in",
+    register: "Register",
+    nickname: "Name",
+    nicknamePlaceholder: "e.g. Alex",
+    email: "Email",
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+    registerAndEnter: "Register and Enter",
+    guestLogin: "Continue as Guest",
+    authSubtitle: "Sign in to manage roles, deadlines, interviews, and calendar reminders.",
+    authModeLabel: "Sign-in Method",
+    authNote: "This version uses local browser sign-in. Data stays in this device's localStorage.",
+    fillAllFields: "Please fill in all required fields.",
+    emailRegistered: "This email is already registered. Sign in instead.",
+    wrongCredentials: "Email or password is incorrect.",
+    calendarFeedbackPrefix: "Opened",
+    calendarFeedbackSuffix: "calendar events. If your browser did not open Calendar, import the .ics file from downloads.",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
+const readLanguage = (): Language => {
+  const stored = localStorage.getItem(LANGUAGE_KEY);
+  return stored === "en" ? "en" : "zh";
+};
+
+const readTheme = (): ThemeMode => {
+  const stored = localStorage.getItem(THEME_KEY);
+  return stored === "light" || stored === "dark" || stored === "system"
+    ? stored
+    : "system";
 };
 
 const statuses: Array<{
@@ -84,6 +287,63 @@ const materialOptions: MaterialStatus[] = ["未开始", "准备中", "已提交"
 const priorityOptions: Priority[] = ["高", "中", "低"];
 const allFilterOption = "全部";
 const activeStatuses: ApplicationStatus[] = ["draft", "submitted", "interview"];
+
+const statusLabels: Record<
+  Language,
+  Record<ApplicationStatus, { title: string; shortTitle: string }>
+> = {
+  zh: {
+    draft: { title: "未投递", shortTitle: "准备" },
+    submitted: { title: "已投递", shortTitle: "等待" },
+    interview: { title: "笔试/面试中", shortTitle: "推进" },
+    offer: { title: "已录用", shortTitle: "录用" },
+    rejected: { title: "已拒绝", shortTitle: "归档" },
+  },
+  en: {
+    draft: { title: "Not Applied", shortTitle: "Prep" },
+    submitted: { title: "Applied", shortTitle: "Waiting" },
+    interview: { title: "Tests / Interviews", shortTitle: "Process" },
+    offer: { title: "Offer", shortTitle: "Offer" },
+    rejected: { title: "Rejected", shortTitle: "Archive" },
+  },
+};
+
+const materialStatusLabels: Record<Language, Record<MaterialStatus, string>> = {
+  zh: {
+    未开始: "未开始",
+    准备中: "准备中",
+    已提交: "已提交",
+    需补充: "需补充",
+  },
+  en: {
+    未开始: "Not Started",
+    准备中: "Preparing",
+    已提交: "Submitted",
+    需补充: "Needs Update",
+  },
+};
+
+const priorityLabels: Record<Language, Record<Priority, string>> = {
+  zh: { 高: "高", 中: "中", 低: "低" },
+  en: { 高: "High", 中: "Medium", 低: "Low" },
+};
+
+const processStepLabels: Record<Language, Record<ProcessStepId, string>> = {
+  zh: {
+    written: "笔试时间",
+    first: "一面时间",
+    second: "二面时间",
+    hr: "HR 面时间",
+    offerTalk: "Offer 沟通时间",
+  },
+  en: {
+    written: "Written Test",
+    first: "First Interview",
+    second: "Second Interview",
+    hr: "HR Interview",
+    offerTalk: "Offer Discussion",
+  },
+};
 
 const defaultMaterialTemplates = [
   "中文简历",
@@ -345,8 +605,21 @@ const getDaysUntil = (deadline: string) => {
   return Math.ceil(difference / 86_400_000);
 };
 
-const formatDeadline = (deadline: string) => {
+const formatDeadline = (deadline: string, language: Language) => {
   const days = getDaysUntil(deadline);
+  if (language === "en") {
+    if (days < 0) {
+      return `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`;
+    }
+    if (days === 0) {
+      return "Due today";
+    }
+    if (days === 1) {
+      return "Due tomorrow";
+    }
+    return `Due in ${days} days`;
+  }
+
   if (days < 0) {
     return `逾期 ${Math.abs(days)} 天`;
   }
@@ -433,6 +706,9 @@ function App() {
     password: "",
   });
   const [authError, setAuthError] = useState("");
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [language, setLanguage] = useState<Language>(readLanguage);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(readTheme);
   const [applications, setApplications] = useState<JobApplication[]>(readStoredApplications);
   const [form, setForm] = useState<ApplicationForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -452,6 +728,11 @@ function App() {
   const [customMaterialLabel, setCustomMaterialLabel] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const t = copy[language];
+  const visibleStatuses = statusLabels[language];
+  const visibleMaterials = materialStatusLabels[language];
+  const visiblePriorities = priorityLabels[language];
+  const visibleProcessSteps = processStepLabels[language];
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
@@ -460,6 +741,16 @@ function App() {
   useEffect(() => {
     localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem(LANGUAGE_KEY, language);
+    document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, themeMode);
+    document.documentElement.dataset.theme = themeMode;
+  }, [themeMode]);
 
   useEffect(() => {
     const syncDetailRoute = () => {
@@ -474,6 +765,8 @@ function App() {
 
   const currentUser =
     users.find((user) => user.email === sessionEmail?.toLowerCase()) || null;
+  const currentUserName =
+    currentUser?.email === "guest@local" ? t.guest : currentUser?.name || t.guest;
 
   const handleAuthSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -482,13 +775,13 @@ function App() {
     const name = authForm.name.trim();
 
     if (!email || !password || (authMode === "register" && !name)) {
-      setAuthError("请填写完整信息。");
+      setAuthError(t.fillAllFields);
       return;
     }
 
     if (authMode === "register") {
       if (users.some((user) => user.email === email)) {
-        setAuthError("这个邮箱已经注册，请直接登录。");
+        setAuthError(t.emailRegistered);
         return;
       }
 
@@ -496,6 +789,7 @@ function App() {
       setUsers((current) => [...current, nextUser]);
       localStorage.setItem(AUTH_SESSION_KEY, email);
       setSessionEmail(email);
+      setIsAuthOpen(false);
       setAuthError("");
       setAuthForm({ name: "", email: "", password: "" });
       return;
@@ -506,12 +800,13 @@ function App() {
     );
 
     if (!matchedUser) {
-      setAuthError("邮箱或密码不正确。");
+      setAuthError(t.wrongCredentials);
       return;
     }
 
     localStorage.setItem(AUTH_SESSION_KEY, matchedUser.email);
     setSessionEmail(matchedUser.email);
+    setIsAuthOpen(false);
     setAuthError("");
     setAuthForm({ name: "", email: "", password: "" });
   };
@@ -530,6 +825,7 @@ function App() {
     );
     localStorage.setItem(AUTH_SESSION_KEY, guestUser.email);
     setSessionEmail(guestUser.email);
+    setIsAuthOpen(false);
     setAuthError("");
     setAuthForm({ name: "", email: "", password: "" });
   };
@@ -623,10 +919,10 @@ function App() {
   }, [applications]);
 
   const viewTitles: Record<BoardView, string> = {
-    all: "全部申请",
-    upcoming: "即将截止",
-    active: "推进中",
-    offer: "录用",
+    all: t.all,
+    upcoming: t.upcomingDeadlines,
+    active: t.inProgress,
+    offer: t.offers,
   };
 
   const switchBoardView = (view: BoardView) => {
@@ -849,7 +1145,7 @@ function App() {
 
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     setFeedbackMessage(
-      `已打开 ${events.length} 个日历事件。若浏览器未弹出日历，请在下载记录中打开 .ics 文件导入。`,
+      `${t.calendarFeedbackPrefix} ${events.length} ${t.calendarFeedbackSuffix}`,
     );
   };
 
@@ -899,38 +1195,38 @@ function App() {
         draggable
         onDragStart={() => setDraggedId(application.id)}
         onDragEnd={() => setDraggedId(null)}
-        title="拖拽到其他状态列"
+        title={t.dragToColumn}
       >
         <div>
           <h3>{application.company}</h3>
           <p>{application.role}</p>
         </div>
-        <span className="priority-badge">{application.priority}</span>
+        <span className="priority-badge">{visiblePriorities[application.priority]}</span>
       </div>
 
       <dl className="card-details">
         <div>
-          <dt>截止日期</dt>
+          <dt>{t.deadline}</dt>
           <dd>
             <span
               className={getDaysUntil(application.deadline) <= 3 ? "deadline hot" : "deadline"}
             >
               {application.deadline}
             </span>
-            <small>{formatDeadline(application.deadline)}</small>
+            <small>{formatDeadline(application.deadline, language)}</small>
           </dd>
         </div>
         <div>
-          <dt>材料状态</dt>
-          <dd>{application.materialStatus}</dd>
+          <dt>{t.materialStatus}</dt>
+          <dd>{visibleMaterials[application.materialStatus]}</dd>
         </div>
         <div>
-          <dt>当前进度</dt>
+          <dt>{t.progress}</dt>
           <dd>{application.progress}</dd>
         </div>
         <div>
-          <dt>备注</dt>
-          <dd>{application.notes || "暂无备注"}</dd>
+          <dt>{t.notes}</dt>
+          <dd>{application.notes || t.noNotes}</dd>
         </div>
       </dl>
 
@@ -942,7 +1238,7 @@ function App() {
             moveApplication(application.id, -1);
           }}
         >
-          前移
+          {t.movePrevious}
         </button>
         <button
           type="button"
@@ -951,7 +1247,7 @@ function App() {
             moveApplication(application.id, 1);
           }}
         >
-          后移
+          {t.moveNext}
         </button>
         <button
           type="button"
@@ -960,7 +1256,7 @@ function App() {
             openEditForm(application);
           }}
         >
-          编辑
+          {t.edit}
         </button>
         <button
           type="button"
@@ -970,34 +1266,79 @@ function App() {
             deleteApplication(application.id);
           }}
         >
-          删除
+          {t.delete}
         </button>
       </div>
     </article>
   );
 
-  if (!currentUser) {
-    return (
-      <AuthScreen
-        mode={authMode}
-        form={authForm}
-        error={authError}
-        onModeChange={(mode) => {
-          setAuthMode(mode);
-          setAuthError("");
-        }}
-        onFormChange={setAuthForm}
-        onSubmit={handleAuthSubmit}
-        onGuestLogin={loginAsGuest}
-      />
-    );
-  }
+  const topNavigation = (
+    <header className="app-top-nav" aria-label={t.boardActions}>
+      <div>
+        <strong>{t.appName}</strong>
+        <span>{currentUserName}</span>
+      </div>
+
+      <div className="top-nav-actions">
+        <label>
+          {t.language}
+          <select
+            value={language}
+            onChange={(event) => setLanguage(event.target.value as Language)}
+          >
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+
+        <label>
+          {t.theme}
+          <select
+            value={themeMode}
+            onChange={(event) => setThemeMode(event.target.value as ThemeMode)}
+          >
+            <option value="system">{t.system}</option>
+            <option value="light">{t.light}</option>
+            <option value="dark">{t.dark}</option>
+          </select>
+        </label>
+
+        {currentUser ? (
+          <button type="button" onClick={logout}>
+            {t.logout}
+          </button>
+        ) : (
+          <button type="button" onClick={() => setIsAuthOpen(true)}>
+            {t.login}
+          </button>
+        )}
+      </div>
+    </header>
+  );
+
+  const authDialog = isAuthOpen && (
+    <AuthScreen
+      mode={authMode}
+      form={authForm}
+      error={authError}
+      onModeChange={(mode) => {
+        setAuthMode(mode);
+        setAuthError("");
+      }}
+      onFormChange={setAuthForm}
+      onSubmit={handleAuthSubmit}
+      onGuestLogin={loginAsGuest}
+      onClose={() => setIsAuthOpen(false)}
+      t={t}
+    />
+  );
 
   if (selectedApplication) {
     const materialProgress = getMaterialProgress(selectedApplication.materials);
 
     return (
       <main className="app-shell detail-shell">
+        {topNavigation}
         <button
           type="button"
           className="back-button"
@@ -1009,26 +1350,26 @@ function App() {
             setDetailApplicationId(null);
           }}
         >
-          返回看板
+          {t.backToBoard}
         </button>
 
         <section className="detail-hero" aria-labelledby="detail-title">
           <div>
-            <p className="eyebrow">{statusTitles[selectedApplication.status]}</p>
+            <p className="eyebrow">{visibleStatuses[selectedApplication.status].title}</p>
             <h1 id="detail-title">{selectedApplication.company}</h1>
             <p className="subtitle">{selectedApplication.role}</p>
           </div>
           <span className="priority-badge detail-priority">
-            {selectedApplication.priority}
+            {visiblePriorities[selectedApplication.priority]}
           </span>
         </section>
 
-        <section className="detail-grid" aria-label="申请详情">
+        <section className="detail-grid" aria-label={t.detailLabel}>
           <article className="detail-panel">
-            <h2>进度信息</h2>
+            <h2>{t.progressInfo}</h2>
             <dl className="detail-list">
               <div>
-                <dt>截止日期</dt>
+                <dt>{t.deadline}</dt>
                 <dd>
                   <span
                     className={
@@ -1039,27 +1380,27 @@ function App() {
                   >
                     {selectedApplication.deadline}
                   </span>
-                  <small>{formatDeadline(selectedApplication.deadline)}</small>
+                  <small>{formatDeadline(selectedApplication.deadline, language)}</small>
                 </dd>
               </div>
               <div>
-                <dt>材料状态</dt>
-                <dd>{selectedApplication.materialStatus}</dd>
+                <dt>{t.materialStatus}</dt>
+                <dd>{visibleMaterials[selectedApplication.materialStatus]}</dd>
               </div>
               <div>
-                <dt>当前进度</dt>
+                <dt>{t.progress}</dt>
                 <dd>{selectedApplication.progress}</dd>
               </div>
               <div>
-                <dt>备注</dt>
-                <dd>{selectedApplication.notes || "暂无备注"}</dd>
+                <dt>{t.notes}</dt>
+                <dd>{selectedApplication.notes || t.noNotes}</dd>
               </div>
             </dl>
           </article>
 
           <article className="detail-panel">
             <div className="section-heading">
-              <h2>申请材料 checklist</h2>
+              <h2>{t.materialsChecklist}</h2>
               <span>{materialProgress.label}</span>
             </div>
             <div className="detail-materials">
@@ -1079,23 +1420,23 @@ function App() {
           </article>
         </section>
 
-        <section className="detail-panel detail-timeline-panel" aria-label="面试流程">
-          <h2>面试流程</h2>
+        <section className="detail-panel detail-timeline-panel" aria-label={t.interviewProcess}>
+          <h2>{t.interviewProcess}</h2>
           <div className="timeline-list">
             {selectedApplication.processSteps.map((step) => (
               <article className="timeline-item" key={step.id}>
                 <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.date || "未安排"}</p>
+                  <h3>{visibleProcessSteps[step.id]}</h3>
+                  <p>{step.date || t.notScheduled}</p>
                 </div>
                 <dl>
                   <div>
-                    <dt>结果</dt>
-                    <dd>{step.result || "待更新"}</dd>
+                    <dt>{t.result}</dt>
+                    <dd>{step.result || t.pendingUpdate}</dd>
                   </div>
                   <div>
-                    <dt>备注</dt>
-                    <dd>{step.notes || "暂无备注"}</dd>
+                    <dt>{t.notes}</dt>
+                    <dd>{step.notes || t.noNotes}</dd>
                   </div>
                 </dl>
               </article>
@@ -1103,28 +1444,28 @@ function App() {
           </div>
         </section>
 
-        <section className="detail-actions" aria-label="详情操作">
+        <section className="detail-actions" aria-label={t.detailActions}>
           <button
             type="button"
             onClick={() => moveApplication(selectedApplication.id, -1)}
           >
-            前移
+            {t.movePrevious}
           </button>
           <button
             type="button"
             onClick={() => moveApplication(selectedApplication.id, 1)}
           >
-            后移
+            {t.moveNext}
           </button>
           <button type="button" onClick={() => openEditForm(selectedApplication)}>
-            编辑
+            {t.edit}
           </button>
           <button
             type="button"
             className="danger-button"
             onClick={() => deleteApplication(selectedApplication.id)}
           >
-            删除
+            {t.delete}
           </button>
         </section>
 
@@ -1140,27 +1481,27 @@ function App() {
             toggleFormMaterial={toggleFormMaterial}
             removeFormMaterial={removeFormMaterial}
             addCustomMaterial={addCustomMaterial}
+            t={t}
+            language={language}
+            visibleStatuses={visibleStatuses}
+            visibleMaterials={visibleMaterials}
+            visiblePriorities={visiblePriorities}
+            visibleProcessSteps={visibleProcessSteps}
           />
         )}
+        {authDialog}
       </main>
     );
   }
 
   return (
     <main className="app-shell">
+      {topNavigation}
       <section className="top-bar" aria-labelledby="page-title">
         <div className="title-group">
-          <p className="eyebrow">校园招聘</p>
-          <h1 id="page-title">求职申请管理看板</h1>
-          <p className="subtitle">
-            统一管理岗位截止日期、材料状态和面试进度。
-          </p>
-          <div className="user-session">
-            <span>{currentUser.name}</span>
-            <button type="button" onClick={logout}>
-              退出登录
-            </button>
-          </div>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <h1 id="page-title">{t.appName}</h1>
+          <p className="subtitle">{t.subtitle}</p>
         </div>
 
         <div className="campus-photo">
@@ -1171,13 +1512,13 @@ function App() {
         </div>
       </section>
 
-      <section className="dashboard" aria-label="求职申请概览">
+      <section className="dashboard" aria-label={t.overviewLabel}>
         <button
           type="button"
           className={boardView === "all" ? "metric is-active" : "metric"}
           onClick={() => switchBoardView("all")}
         >
-          <span>申请总数</span>
+          <span>{t.totalApplications}</span>
           <strong>{metrics.total}</strong>
         </button>
         <button
@@ -1187,7 +1528,7 @@ function App() {
           }
           onClick={() => switchBoardView("upcoming")}
         >
-          <span>即将截止</span>
+          <span>{t.upcomingDeadlines}</span>
           <strong>{metrics.upcoming}</strong>
         </button>
         <button
@@ -1195,7 +1536,7 @@ function App() {
           className={boardView === "active" ? "metric is-active" : "metric"}
           onClick={() => switchBoardView("active")}
         >
-          <span>推进中</span>
+          <span>{t.inProgress}</span>
           <strong>{metrics.active}</strong>
         </button>
         <button
@@ -1203,15 +1544,15 @@ function App() {
           className={boardView === "offer" ? "metric success is-active" : "metric success"}
           onClick={() => switchBoardView("offer")}
         >
-          <span>录用</span>
+          <span>{t.offers}</span>
           <strong>{metrics.offers}</strong>
         </button>
       </section>
 
-      <section className="toolbar" aria-label="看板操作">
+      <section className="toolbar" aria-label={t.boardActions}>
         <div className="toolbar-actions">
           <button type="button" className="primary-button" onClick={openCreateForm}>
-            新增申请
+            {t.addApplication}
           </button>
           <button
             type="button"
@@ -1220,40 +1561,42 @@ function App() {
               setBoardView((current) => (current === "upcoming" ? "all" : "upcoming"))
             }
           >
-            {boardView === "upcoming" ? "显示全部" : "筛选即将截止"}
+            {boardView === "upcoming" ? t.showAll : t.filterUpcoming}
           </button>
           <button type="button" className="filter-button" onClick={exportCalendarEvents}>
-            添加到日历
+            {t.calendar}
           </button>
         </div>
 
         <div className="filter-grid">
           <label>
-            搜索
+            {t.search}
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="公司、岗位、进度或备注"
+              placeholder={t.searchPlaceholder}
             />
           </label>
 
           <label>
-            优先级
+            {t.priority}
             <select
               value={priorityFilter}
               onChange={(event) =>
                 setPriorityFilter(event.target.value as Priority | typeof allFilterOption)
               }
             >
-              <option>{allFilterOption}</option>
+              <option value={allFilterOption}>{t.all}</option>
               {priorityOptions.map((priority) => (
-                <option key={priority}>{priority}</option>
+                <option key={priority} value={priority}>
+                  {visiblePriorities[priority]}
+                </option>
               ))}
             </select>
           </label>
 
           <label>
-            材料状态
+            {t.materialStatus}
             <select
               value={materialFilter}
               onChange={(event) =>
@@ -1262,9 +1605,11 @@ function App() {
                 )
               }
             >
-              <option>{allFilterOption}</option>
+              <option value={allFilterOption}>{t.all}</option>
               {materialOptions.map((option) => (
-                <option key={option}>{option}</option>
+                <option key={option} value={option}>
+                  {visibleMaterials[option]}
+                </option>
               ))}
             </select>
           </label>
@@ -1274,54 +1619,54 @@ function App() {
             className={sortByDeadline ? "filter-button is-active" : "filter-button"}
             onClick={() => setSortByDeadline((current) => !current)}
           >
-            {sortByDeadline ? "返回状态看板" : "按截止日期排序"}
+            {sortByDeadline ? t.backToBoardView : t.sortByDeadline}
           </button>
         </div>
       </section>
       {feedbackMessage && <p className="feedback-message">{feedbackMessage}</p>}
 
-      <section className="view-banner" aria-label="当前看板页面">
+      <section className="view-banner" aria-label={t.currentPage}>
         <div>
-          <span>当前页面</span>
+          <span>{t.currentPage}</span>
           <strong>{viewTitles[boardView]}</strong>
         </div>
         {boardView !== "all" && (
           <button type="button" onClick={() => switchBoardView("all")}>
-            返回全部
+            {t.backToAll}
           </button>
         )}
       </section>
 
       {sortByDeadline ? (
-        <section className="deadline-list" aria-label="按截止日期排序">
+        <section className="deadline-list" aria-label={t.deadlineSortTitle}>
           <div className="column-header">
             <div>
               <p>DDL</p>
-              <h2>按截止日期排序</h2>
+              <h2>{t.deadlineSortTitle}</h2>
             </div>
             <span>{visibleApplications.length}</span>
           </div>
           <div className="deadline-card-list">
             {visibleApplications.map(renderApplicationCard)}
             {visibleApplications.length === 0 && (
-              <div className="empty-state">暂无符合条件的申请</div>
+              <div className="empty-state">{t.noMatchedApplications}</div>
             )}
           </div>
         </section>
       ) : (
-        <section className="board" aria-label="申请状态看板">
+        <section className="board" aria-label={t.statusBoardLabel}>
           {statuses.map((status) => (
             <section
               className="board-column"
               key={status.id}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => handleDrop(status.id)}
-              aria-label={status.title}
+              aria-label={visibleStatuses[status.id].title}
             >
               <div className="column-header">
                 <div>
-                  <p>{status.shortTitle}</p>
-                  <h2>{status.title}</h2>
+                  <p>{visibleStatuses[status.id].shortTitle}</p>
+                  <h2>{visibleStatuses[status.id].title}</h2>
                 </div>
                 <span>{groupedApplications[status.id].length}</span>
               </div>
@@ -1330,7 +1675,11 @@ function App() {
                 {groupedApplications[status.id].map(renderApplicationCard)}
 
                 {groupedApplications[status.id].length === 0 && (
-                  <div className="empty-state">暂无{status.title}申请</div>
+                  <div className="empty-state">
+                    {t.noStatusApplicationsPrefix}
+                    {language === "zh" ? visibleStatuses[status.id].title : ` ${visibleStatuses[status.id].title} `}
+                    {t.noStatusApplicationsSuffix}
+                  </div>
                 )}
               </div>
             </section>
@@ -1350,16 +1699,18 @@ function App() {
           toggleFormMaterial={toggleFormMaterial}
           removeFormMaterial={removeFormMaterial}
           addCustomMaterial={addCustomMaterial}
+          t={t}
+          language={language}
+          visibleStatuses={visibleStatuses}
+          visibleMaterials={visibleMaterials}
+          visiblePriorities={visiblePriorities}
+          visibleProcessSteps={visibleProcessSteps}
         />
       )}
+      {authDialog}
     </main>
   );
 }
-
-const statusTitles = statuses.reduce(
-  (acc, status) => ({ ...acc, [status.id]: status.title }),
-  {} as Record<ApplicationStatus, string>,
-);
 
 type AuthScreenProps = {
   mode: AuthMode;
@@ -1369,6 +1720,8 @@ type AuthScreenProps = {
   onFormChange: Dispatch<SetStateAction<AuthForm>>;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onGuestLogin: () => void;
+  onClose: () => void;
+  t: (typeof copy)[Language];
 };
 
 function AuthScreen({
@@ -1379,51 +1732,60 @@ function AuthScreen({
   onFormChange,
   onSubmit,
   onGuestLogin,
+  onClose,
+  t,
 }: AuthScreenProps) {
   const isRegister = mode === "register";
 
   return (
-    <main className="auth-shell">
+    <div className="auth-shell" role="presentation">
       <section className="auth-panel" aria-labelledby="auth-title">
+        <div className="auth-panel-header">
+          <div>
+            <p className="eyebrow">{t.eyebrow}</p>
+            <h1 id="auth-title">{t.appName}</h1>
+          </div>
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t.closeLogin}>
+            x
+          </button>
+        </div>
         <div>
-          <p className="eyebrow">校园招聘</p>
-          <h1 id="auth-title">求职申请管理看板</h1>
-          <p className="subtitle">登录后管理岗位、DDL、面试流程和日历提醒。</p>
+          <p className="subtitle">{t.authSubtitle}</p>
         </div>
 
-        <div className="auth-tabs" aria-label="登录方式">
+        <div className="auth-tabs" aria-label={t.authModeLabel}>
           <button
             type="button"
             className={mode === "login" ? "is-active" : ""}
             onClick={() => onModeChange("login")}
           >
-            登录
+            {t.login}
           </button>
           <button
             type="button"
             className={mode === "register" ? "is-active" : ""}
             onClick={() => onModeChange("register")}
           >
-            注册
+            {t.register}
           </button>
         </div>
 
         <form className="auth-form" onSubmit={onSubmit}>
           {isRegister && (
             <label>
-              昵称
+              {t.nickname}
               <input
                 value={form.name}
                 onChange={(event) =>
                   onFormChange((current) => ({ ...current, name: event.target.value }))
                 }
-                placeholder="例如：小徐"
+                placeholder={t.nicknamePlaceholder}
               />
             </label>
           )}
 
           <label>
-            邮箱
+            {t.email}
             <input
               type="email"
               value={form.email}
@@ -1435,32 +1797,30 @@ function AuthScreen({
           </label>
 
           <label>
-            密码
+            {t.password}
             <input
               type="password"
               value={form.password}
               onChange={(event) =>
                 onFormChange((current) => ({ ...current, password: event.target.value }))
               }
-              placeholder="请输入密码"
+              placeholder={t.passwordPlaceholder}
             />
           </label>
 
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" className="primary-button">
-            {isRegister ? "注册并进入" : "登录"}
+            {isRegister ? t.registerAndEnter : t.login}
           </button>
           <button type="button" className="guest-button" onClick={onGuestLogin}>
-            访客登录
+            {t.guestLogin}
           </button>
         </form>
 
-        <p className="auth-note">
-          当前版本使用浏览器本地登录，数据保存在这台设备的 localStorage。
-        </p>
+        <p className="auth-note">{t.authNote}</p>
       </section>
-    </main>
+    </div>
   );
 }
 
@@ -1475,6 +1835,12 @@ type ApplicationFormPanelProps = {
   toggleFormMaterial: (materialId: string) => void;
   removeFormMaterial: (materialId: string) => void;
   addCustomMaterial: () => void;
+  t: (typeof copy)[Language];
+  language: Language;
+  visibleStatuses: Record<ApplicationStatus, { title: string; shortTitle: string }>;
+  visibleMaterials: Record<MaterialStatus, string>;
+  visiblePriorities: Record<Priority, string>;
+  visibleProcessSteps: Record<ProcessStepId, string>;
 };
 
 function ApplicationFormPanel({
@@ -1488,6 +1854,12 @@ function ApplicationFormPanel({
   toggleFormMaterial,
   removeFormMaterial,
   addCustomMaterial,
+  t,
+  language,
+  visibleStatuses,
+  visibleMaterials,
+  visiblePriorities,
+  visibleProcessSteps,
 }: ApplicationFormPanelProps) {
   const updateProcessStep = (
     stepId: ProcessStepId,
@@ -1503,45 +1875,45 @@ function ApplicationFormPanel({
 
   return (
     <div className="form-backdrop" role="presentation">
-      <section className="application-form-panel" aria-label="申请表单">
+      <section className="application-form-panel" aria-label={t.formLabel}>
         <div className="form-heading">
           <div>
-            <p>{editingId ? "更新记录" : "新增岗位"}</p>
-            <h2>{editingId ? "编辑申请" : "新增申请"}</h2>
+            <p>{editingId ? t.updateRecord : t.createRecord}</p>
+            <h2>{editingId ? t.editApplication : t.addApplication}</h2>
           </div>
-          <button type="button" className="icon-button" onClick={closeForm} aria-label="关闭表单">
+          <button type="button" className="icon-button" onClick={closeForm} aria-label={t.closeForm}>
             x
           </button>
         </div>
 
         <form onSubmit={saveApplication}>
           <label>
-            公司名称
+            {t.companyName}
             <input
               required
               value={form.company}
               onChange={(event) =>
                 setForm((current) => ({ ...current, company: event.target.value }))
               }
-              placeholder="例如：阿里巴巴"
+              placeholder={t.companyPlaceholder}
             />
           </label>
 
           <label>
-            岗位名称
+            {t.roleName}
             <input
               required
               value={form.role}
               onChange={(event) =>
                 setForm((current) => ({ ...current, role: event.target.value }))
               }
-              placeholder="例如：数据分析实习生"
+              placeholder={t.rolePlaceholder}
             />
           </label>
 
           <div className="form-row">
             <label>
-              截止日期
+              {t.deadline}
               <input
                 type="date"
                 value={form.deadline}
@@ -1552,7 +1924,7 @@ function ApplicationFormPanel({
             </label>
 
             <label>
-              优先级
+              {t.priority}
               <select
                 value={form.priority}
                 onChange={(event) =>
@@ -1563,7 +1935,9 @@ function ApplicationFormPanel({
                 }
               >
                 {priorityOptions.map((priority) => (
-                  <option key={priority}>{priority}</option>
+                  <option key={priority} value={priority}>
+                    {visiblePriorities[priority]}
+                  </option>
                 ))}
               </select>
             </label>
@@ -1571,7 +1945,7 @@ function ApplicationFormPanel({
 
           <div className="form-row">
             <label>
-              材料提交状态
+              {t.materialStatus}
               <select
                 value={form.materialStatus}
                 onChange={(event) =>
@@ -1582,13 +1956,15 @@ function ApplicationFormPanel({
                 }
               >
                 {materialOptions.map((option) => (
-                  <option key={option}>{option}</option>
+                  <option key={option} value={option}>
+                    {visibleMaterials[option]}
+                  </option>
                 ))}
               </select>
             </label>
 
             <label>
-              当前状态
+              {t.currentStatus}
               <select
                 value={form.status}
                 onChange={(event) =>
@@ -1600,7 +1976,7 @@ function ApplicationFormPanel({
               >
                 {statuses.map((status) => (
                   <option key={status.id} value={status.id}>
-                    {status.title}
+                    {visibleStatuses[status.id].title}
                   </option>
                 ))}
               </select>
@@ -1608,19 +1984,19 @@ function ApplicationFormPanel({
           </div>
 
           <label>
-            当前进度
+            {t.progress}
             <input
               value={form.progress}
               onChange={(event) =>
                 setForm((current) => ({ ...current, progress: event.target.value }))
               }
-              placeholder="例如：等待 HR 电话面试"
+              placeholder={t.progressPlaceholder}
             />
           </label>
 
-          <section className="form-section" aria-label="申请材料清单">
+          <section className="form-section" aria-label={t.materialsChecklist}>
             <div className="section-heading">
-              <h3>申请材料 checklist</h3>
+              <h3>{t.materialsChecklist}</h3>
               <span>{getMaterialProgress(form.materials).label}</span>
             </div>
 
@@ -1640,7 +2016,7 @@ function ApplicationFormPanel({
                     className="remove-material-button"
                     onClick={() => removeFormMaterial(material.id)}
                   >
-                    移除
+                    {t.remove}
                   </button>
                 </div>
               ))}
@@ -1650,27 +2026,27 @@ function ApplicationFormPanel({
               <input
                 value={customMaterialLabel}
                 onChange={(event) => setCustomMaterialLabel(event.target.value)}
-                placeholder="添加自定义材料"
+                placeholder={t.addCustomMaterial}
               />
               <button type="button" onClick={addCustomMaterial}>
-                添加
+                {t.add}
               </button>
             </div>
           </section>
 
-          <section className="form-section" aria-label="面试流程">
+          <section className="form-section" aria-label={t.interviewProcess}>
             <div className="section-heading">
-              <h3>面试流程</h3>
-              <span>5 步</span>
+              <h3>{t.interviewProcess}</h3>
+              <span>{language === "zh" ? "5 步" : "5 steps"}</span>
             </div>
 
             <div className="process-form-list">
               {form.processSteps.map((step) => (
                 <article className="process-form-item" key={step.id}>
-                  <h4>{step.title}</h4>
+                  <h4>{visibleProcessSteps[step.id]}</h4>
                   <div className="form-row">
                     <label>
-                      时间
+                      {t.time}
                       <input
                         type="date"
                         value={step.date}
@@ -1680,25 +2056,25 @@ function ApplicationFormPanel({
                       />
                     </label>
                     <label>
-                      结果
+                      {t.result}
                       <input
                         value={step.result}
                         onChange={(event) =>
                           updateProcessStep(step.id, { result: event.target.value })
                         }
-                        placeholder="例如：通过 / 待参加 / 未通过"
+                        placeholder={t.resultPlaceholder}
                       />
                     </label>
                   </div>
                   <label>
-                    备注
+                    {t.notes}
                     <textarea
                       rows={2}
                       value={step.notes}
                       onChange={(event) =>
                         updateProcessStep(step.id, { notes: event.target.value })
                       }
-                      placeholder="记录准备重点、面试反馈或后续事项"
+                      placeholder={t.processNotesPlaceholder}
                     />
                   </label>
                 </article>
@@ -1707,23 +2083,23 @@ function ApplicationFormPanel({
           </section>
 
           <label>
-            备注
+            {t.notes}
             <textarea
               rows={4}
               value={form.notes}
               onChange={(event) =>
                 setForm((current) => ({ ...current, notes: event.target.value }))
               }
-              placeholder="记录材料补充、面试准备或跟进事项"
+              placeholder={t.notesPlaceholder}
             />
           </label>
 
           <div className="form-actions">
             <button type="button" onClick={closeForm}>
-              取消
+              {t.cancel}
             </button>
             <button type="submit" className="primary-button">
-              保存申请
+              {t.saveApplication}
             </button>
           </div>
         </form>

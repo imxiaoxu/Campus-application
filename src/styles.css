@@ -8,6 +8,18 @@
   text-rendering: optimizeLegibility;
 }
 
+:root[data-theme="dark"] {
+  color: #eef4ef;
+  background: #101612;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    color: #eef4ef;
+    background: #101612;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -18,6 +30,16 @@ body {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 246, 242, 0.96)),
     #f4f6f2;
+}
+
+:root[data-theme="dark"] body {
+  background: #101612;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] body {
+    background: #101612;
+  }
 }
 
 button,
@@ -45,6 +67,62 @@ textarea:focus-visible {
   width: min(1480px, 100%);
   margin: 0 auto;
   padding: 28px;
+}
+
+.app-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #d8dfd3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #ffffff;
+}
+
+.app-top-nav > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.app-top-nav strong {
+  color: #13241f;
+  font-size: 1rem;
+}
+
+.app-top-nav span {
+  color: #66736b;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.top-nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.top-nav-actions label {
+  min-width: 118px;
+  gap: 5px;
+  font-size: 0.76rem;
+}
+
+.top-nav-actions select {
+  min-height: 36px;
+  padding: 7px 9px;
+}
+
+.top-nav-actions button {
+  min-height: 36px;
+  border: 1px solid #cbd5cd;
+  background: #ffffff;
+  color: #26312b;
+  font-weight: 800;
+  padding: 7px 12px;
 }
 
 .top-bar {
@@ -98,13 +176,13 @@ h1 {
 }
 
 .auth-shell {
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
   display: grid;
   place-items: center;
   padding: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 246, 242, 0.98)),
-    #f4f6f2;
+  background: rgba(19, 36, 31, 0.35);
 }
 
 .auth-panel {
@@ -118,6 +196,13 @@ h1 {
   box-shadow: 0 18px 45px rgba(28, 39, 32, 0.08);
 }
 
+.auth-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .auth-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -125,8 +210,7 @@ h1 {
 }
 
 .auth-tabs button,
-.guest-button,
-.user-session button {
+.guest-button {
   border: 1px solid #cbd5cd;
   border-radius: 8px;
   background: #ffffff;
@@ -160,30 +244,6 @@ h1 {
   color: #75817a;
   font-size: 0.88rem;
   font-weight: 700;
-}
-
-.user-session {
-  width: fit-content;
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 16px;
-  border: 1px solid #d8dfd3;
-  border-radius: 8px;
-  padding: 6px;
-  background: #f8faf7;
-}
-
-.user-session span {
-  color: #0f766e;
-  font-size: 0.88rem;
-  font-weight: 850;
-  padding: 0 8px;
-}
-
-.user-session button {
-  padding: 6px 9px;
-  font-size: 0.82rem;
 }
 
 .campus-photo {
@@ -911,6 +971,146 @@ textarea {
   background: #ffffff;
 }
 
+:root[data-theme="dark"] .app-top-nav,
+:root[data-theme="dark"] .title-group,
+:root[data-theme="dark"] .metric,
+:root[data-theme="dark"] .toolbar,
+:root[data-theme="dark"] .view-banner,
+:root[data-theme="dark"] .board-column,
+:root[data-theme="dark"] .deadline-list,
+:root[data-theme="dark"] .application-card,
+:root[data-theme="dark"] .detail-hero,
+:root[data-theme="dark"] .detail-panel,
+:root[data-theme="dark"] .detail-actions,
+:root[data-theme="dark"] .application-form-panel,
+:root[data-theme="dark"] .form-section,
+:root[data-theme="dark"] .process-form-item,
+:root[data-theme="dark"] .auth-panel {
+  border-color: #33463b;
+  background: #17211b;
+}
+
+:root[data-theme="dark"] h1,
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] h3,
+:root[data-theme="dark"] .app-top-nav strong,
+:root[data-theme="dark"] .metric strong,
+:root[data-theme="dark"] .column-header h2,
+:root[data-theme="dark"] .card-heading h3,
+:root[data-theme="dark"] .deadline,
+:root[data-theme="dark"] .detail-list dd,
+:root[data-theme="dark"] .timeline-item dd {
+  color: #eef4ef;
+}
+
+:root[data-theme="dark"] .subtitle,
+:root[data-theme="dark"] .app-top-nav span,
+:root[data-theme="dark"] .card-heading p,
+:root[data-theme="dark"] .metric span,
+:root[data-theme="dark"] .card-details dd,
+:root[data-theme="dark"] .auth-note {
+  color: #aab9af;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .filter-button,
+:root[data-theme="dark"] .switch-control,
+:root[data-theme="dark"] .card-actions button,
+:root[data-theme="dark"] .form-actions button,
+:root[data-theme="dark"] .icon-button,
+:root[data-theme="dark"] .add-material-row button,
+:root[data-theme="dark"] .remove-material-button,
+:root[data-theme="dark"] .top-nav-actions button,
+:root[data-theme="dark"] .back-button,
+:root[data-theme="dark"] .detail-actions button,
+:root[data-theme="dark"] .auth-tabs button,
+:root[data-theme="dark"] .guest-button {
+  border-color: #405348;
+  background: #111813;
+  color: #eef4ef;
+}
+
+:root[data-theme="dark"] .metric.urgent,
+:root[data-theme="dark"] .metric.success,
+:root[data-theme="dark"] .filter-button.is-active,
+:root[data-theme="dark"] .timeline-item,
+:root[data-theme="dark"] .material-chip {
+  background: #1c2a22;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .app-top-nav,
+  :root[data-theme="system"] .title-group,
+  :root[data-theme="system"] .metric,
+  :root[data-theme="system"] .toolbar,
+  :root[data-theme="system"] .view-banner,
+  :root[data-theme="system"] .board-column,
+  :root[data-theme="system"] .deadline-list,
+  :root[data-theme="system"] .application-card,
+  :root[data-theme="system"] .detail-hero,
+  :root[data-theme="system"] .detail-panel,
+  :root[data-theme="system"] .detail-actions,
+  :root[data-theme="system"] .application-form-panel,
+  :root[data-theme="system"] .form-section,
+  :root[data-theme="system"] .process-form-item,
+  :root[data-theme="system"] .auth-panel {
+    border-color: #33463b;
+    background: #17211b;
+  }
+
+  :root[data-theme="system"] h1,
+  :root[data-theme="system"] h2,
+  :root[data-theme="system"] h3,
+  :root[data-theme="system"] .app-top-nav strong,
+  :root[data-theme="system"] .metric strong,
+  :root[data-theme="system"] .column-header h2,
+  :root[data-theme="system"] .card-heading h3,
+  :root[data-theme="system"] .deadline,
+  :root[data-theme="system"] .detail-list dd,
+  :root[data-theme="system"] .timeline-item dd {
+    color: #eef4ef;
+  }
+
+  :root[data-theme="system"] .subtitle,
+  :root[data-theme="system"] .app-top-nav span,
+  :root[data-theme="system"] .card-heading p,
+  :root[data-theme="system"] .metric span,
+  :root[data-theme="system"] .card-details dd,
+  :root[data-theme="system"] .auth-note {
+    color: #aab9af;
+  }
+
+  :root[data-theme="system"] input,
+  :root[data-theme="system"] select,
+  :root[data-theme="system"] textarea,
+  :root[data-theme="system"] .filter-button,
+  :root[data-theme="system"] .switch-control,
+  :root[data-theme="system"] .card-actions button,
+  :root[data-theme="system"] .form-actions button,
+  :root[data-theme="system"] .icon-button,
+  :root[data-theme="system"] .add-material-row button,
+  :root[data-theme="system"] .remove-material-button,
+  :root[data-theme="system"] .top-nav-actions button,
+  :root[data-theme="system"] .back-button,
+  :root[data-theme="system"] .detail-actions button,
+  :root[data-theme="system"] .auth-tabs button,
+  :root[data-theme="system"] .guest-button {
+    border-color: #405348;
+    background: #111813;
+    color: #eef4ef;
+  }
+
+  :root[data-theme="system"] .metric.urgent,
+  :root[data-theme="system"] .metric.success,
+  :root[data-theme="system"] .filter-button.is-active,
+  :root[data-theme="system"] .timeline-item,
+  :root[data-theme="system"] .material-chip {
+    background: #1c2a22;
+  }
+}
+
 @media (max-width: 1040px) {
   .top-bar {
     grid-template-columns: 1fr;
@@ -928,6 +1128,17 @@ textarea {
 @media (max-width: 720px) {
   .app-shell {
     padding: 16px;
+  }
+
+  .app-top-nav,
+  .top-nav-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .top-nav-actions label,
+  .top-nav-actions button {
+    width: 100%;
   }
 
   .title-group {
