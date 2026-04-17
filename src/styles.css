@@ -70,59 +70,123 @@ textarea:focus-visible {
 }
 
 .app-top-nav {
+  margin: -28px calc(50% - 50vw) 20px;
+  border-bottom: 1px solid #eee5d8;
+  background: rgba(250, 245, 239, 0.95);
+  backdrop-filter: blur(14px);
+}
+
+.app-top-nav-inner {
+  width: min(1480px, calc(100vw - 32px));
+  min-height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
+  margin: 0 auto;
+  padding: 10px 28px;
+}
+
+.top-nav-brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
   gap: 14px;
-  margin-bottom: 16px;
-  border: 1px solid #d8dfd3;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: #ffffff;
 }
 
-.app-top-nav > div:first-child {
-  display: grid;
-  gap: 2px;
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #bf1f2e;
 }
 
-.app-top-nav strong {
-  color: #13241f;
-  font-size: 1rem;
+.brand-mark svg {
+  width: 100%;
+  height: 100%;
 }
 
-.app-top-nav span {
-  color: #66736b;
-  font-size: 0.86rem;
-  font-weight: 750;
+.top-nav-brand strong {
+  min-width: 0;
+  color: #211a17;
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .top-nav-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: end;
+  gap: 12px;
+  align-items: center;
   justify-content: flex-end;
 }
 
-.top-nav-actions label {
-  min-width: 118px;
-  gap: 5px;
-  font-size: 0.76rem;
+.top-nav-menu-group {
+  position: relative;
 }
 
-.top-nav-actions select {
-  min-height: 36px;
-  padding: 7px 9px;
+.nav-icon-button,
+.nav-login-button {
+  min-height: 40px;
+  border: 1px solid #dddad5;
+  background: rgba(255, 255, 255, 0.92);
+  color: #2c231e;
+  box-shadow: 0 1px 2px rgba(33, 26, 23, 0.04);
 }
 
-.top-nav-actions button {
-  min-height: 36px;
-  border: 1px solid #cbd5cd;
-  background: #ffffff;
-  color: #26312b;
+.nav-icon-button {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0;
+}
+
+.nav-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nav-login-button {
+  border-radius: 999px;
   font-weight: 800;
-  padding: 7px 12px;
+  padding: 0 16px;
+}
+
+.top-nav-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 15;
+  min-width: 132px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #e3ddd4;
+  border-radius: 8px;
+  padding: 6px;
+  background: #fffdf9;
+  box-shadow: 0 14px 34px rgba(33, 26, 23, 0.12);
+}
+
+.top-nav-popover button {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: #2c231e;
+  font-weight: 700;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.top-nav-popover button.is-active {
+  background: #f5efe7;
 }
 
 .top-bar {
@@ -990,10 +1054,15 @@ textarea {
   background: #17211b;
 }
 
+:root[data-theme="dark"] .app-top-nav {
+  border-bottom-color: #33463b;
+  background: rgba(20, 28, 22, 0.95);
+}
+
 :root[data-theme="dark"] h1,
 :root[data-theme="dark"] h2,
 :root[data-theme="dark"] h3,
-:root[data-theme="dark"] .app-top-nav strong,
+:root[data-theme="dark"] .top-nav-brand strong,
 :root[data-theme="dark"] .metric strong,
 :root[data-theme="dark"] .column-header h2,
 :root[data-theme="dark"] .card-heading h3,
@@ -1004,7 +1073,6 @@ textarea {
 }
 
 :root[data-theme="dark"] .subtitle,
-:root[data-theme="dark"] .app-top-nav span,
 :root[data-theme="dark"] .card-heading p,
 :root[data-theme="dark"] .metric span,
 :root[data-theme="dark"] .card-details dd,
@@ -1022,7 +1090,10 @@ textarea {
 :root[data-theme="dark"] .icon-button,
 :root[data-theme="dark"] .add-material-row button,
 :root[data-theme="dark"] .remove-material-button,
-:root[data-theme="dark"] .top-nav-actions button,
+:root[data-theme="dark"] .nav-icon-button,
+:root[data-theme="dark"] .nav-login-button,
+:root[data-theme="dark"] .top-nav-popover,
+:root[data-theme="dark"] .top-nav-popover button,
 :root[data-theme="dark"] .back-button,
 :root[data-theme="dark"] .detail-actions button,
 :root[data-theme="dark"] .auth-tabs button,
@@ -1030,6 +1101,10 @@ textarea {
   border-color: #405348;
   background: #111813;
   color: #eef4ef;
+}
+
+:root[data-theme="dark"] .top-nav-popover button.is-active {
+  background: #1c2a22;
 }
 
 :root[data-theme="dark"] .metric.urgent,
@@ -1060,10 +1135,15 @@ textarea {
     background: #17211b;
   }
 
+  :root[data-theme="system"] .app-top-nav {
+    border-bottom-color: #33463b;
+    background: rgba(20, 28, 22, 0.95);
+  }
+
   :root[data-theme="system"] h1,
   :root[data-theme="system"] h2,
   :root[data-theme="system"] h3,
-  :root[data-theme="system"] .app-top-nav strong,
+  :root[data-theme="system"] .top-nav-brand strong,
   :root[data-theme="system"] .metric strong,
   :root[data-theme="system"] .column-header h2,
   :root[data-theme="system"] .card-heading h3,
@@ -1074,7 +1154,6 @@ textarea {
   }
 
   :root[data-theme="system"] .subtitle,
-  :root[data-theme="system"] .app-top-nav span,
   :root[data-theme="system"] .card-heading p,
   :root[data-theme="system"] .metric span,
   :root[data-theme="system"] .card-details dd,
@@ -1092,7 +1171,10 @@ textarea {
   :root[data-theme="system"] .icon-button,
   :root[data-theme="system"] .add-material-row button,
   :root[data-theme="system"] .remove-material-button,
-  :root[data-theme="system"] .top-nav-actions button,
+  :root[data-theme="system"] .nav-icon-button,
+  :root[data-theme="system"] .nav-login-button,
+  :root[data-theme="system"] .top-nav-popover,
+  :root[data-theme="system"] .top-nav-popover button,
   :root[data-theme="system"] .back-button,
   :root[data-theme="system"] .detail-actions button,
   :root[data-theme="system"] .auth-tabs button,
@@ -1100,6 +1182,10 @@ textarea {
     border-color: #405348;
     background: #111813;
     color: #eef4ef;
+  }
+
+  :root[data-theme="system"] .top-nav-popover button.is-active {
+    background: #1c2a22;
   }
 
   :root[data-theme="system"] .metric.urgent,
@@ -1130,15 +1216,30 @@ textarea {
     padding: 16px;
   }
 
-  .app-top-nav,
+  .app-top-nav {
+    margin: -16px calc(50% - 50vw) 18px;
+  }
+
+  .app-top-nav-inner,
   .top-nav-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .top-nav-actions label,
-  .top-nav-actions button {
+  .app-top-nav-inner {
+    width: min(1480px, calc(100vw - 20px));
+    padding: 10px 16px;
+  }
+
+  .top-nav-brand,
+  .nav-login-button {
     width: 100%;
+  }
+
+  .top-nav-popover {
+    left: 0;
+    right: auto;
+    min-width: 100%;
   }
 
   .title-group {

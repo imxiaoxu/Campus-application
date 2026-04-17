@@ -2,6 +2,7 @@ import {
   FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -20,6 +21,7 @@ type BoardView = "all" | "upcoming" | "active" | "offer";
 type AuthMode = "login" | "register";
 type Language = "zh" | "en";
 type ThemeMode = "system" | "light" | "dark";
+type TopbarMenu = "language" | "theme" | null;
 
 type MaterialItem = {
   id: string;
@@ -79,6 +81,7 @@ const copy = {
     subtitle: "统一管理岗位截止日期、材料状态和面试进度。",
     language: "语言",
     theme: "主题",
+    brandName: "求职申请管理看板",
     system: "跟随系统",
     light: "浅色",
     dark: "深色",
@@ -171,6 +174,7 @@ const copy = {
     subtitle: "Track deadlines, materials, and interview progress in one place.",
     language: "Language",
     theme: "Theme",
+    brandName: "Job Application Board",
     system: "System",
     light: "Light",
     dark: "Dark",
@@ -709,6 +713,7 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [language, setLanguage] = useState<Language>(readLanguage);
   const [themeMode, setThemeMode] = useState<ThemeMode>(readTheme);
+  const [topbarMenu, setTopbarMenu] = useState<TopbarMenu>(null);
   const [applications, setApplications] = useState<JobApplication[]>(readStoredApplications);
   const [form, setForm] = useState<ApplicationForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -728,6 +733,7 @@ function App() {
   const [customMaterialLabel, setCustomMaterialLabel] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const topbarMenuRef = useRef<HTMLDivElement | null>(null);
   const t = copy[language];
   const visibleStatuses = statusLabels[language];
   const visibleMaterials = materialStatusLabels[language];
@@ -763,10 +769,40 @@ function App() {
     return () => window.removeEventListener("hashchange", syncDetailRoute);
   }, []);
 
+  useEffect(() => {
+    if (!topbarMenu) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (!topbarMenuRef.current?.contains(event.target as Node)) {
+        setTopbarMenu(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setTopbarMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [topbarMenu]);
+
   const currentUser =
     users.find((user) => user.email === sessionEmail?.toLowerCase()) || null;
   const currentUserName =
     currentUser?.email === "guest@local" ? t.guest : currentUser?.name || t.guest;
+  const currentThemeLabel =
+    themeMode === "system" ? t.system : themeMode === "light" ? t.light : t.dark;
 
   const handleAuthSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1274,44 +1310,120 @@ function App() {
 
   const topNavigation = (
     <header className="app-top-nav" aria-label={t.boardActions}>
-      <div>
-        <strong>{t.appName}</strong>
-        <span>{currentUserName}</span>
-      </div>
+      <div className="app-top-nav-inner" ref={topbarMenuRef}>
+        <div className="top-nav-brand">
+          <div className="brand-mark" aria-hidden="true">
+            <BrandMark />
+          </div>
+          <strong>{t.brandName}</strong>
+        </div>
 
-      <div className="top-nav-actions">
-        <label>
-          {t.language}
-          <select
-            value={language}
-            onChange={(event) => setLanguage(event.target.value as Language)}
-          >
-            <option value="zh">中文</option>
-            <option value="en">English</option>
-          </select>
-        </label>
+        <div className="top-nav-actions">
+          <div className="top-nav-menu-group">
+            <button
+              type="button"
+              className="nav-icon-button"
+              aria-label={`${t.theme}: ${currentThemeLabel}`}
+              aria-expanded={topbarMenu === "theme"}
+              aria-haspopup="menu"
+              onClick={() =>
+                setTopbarMenu((current) => (current === "theme" ? null : "theme"))
+              }
+            >
+              <ThemeIcon themeMode={themeMode} />
+            </button>
 
-        <label>
-          {t.theme}
-          <select
-            value={themeMode}
-            onChange={(event) => setThemeMode(event.target.value as ThemeMode)}
-          >
-            <option value="system">{t.system}</option>
-            <option value="light">{t.light}</option>
-            <option value="dark">{t.dark}</option>
-          </select>
-        </label>
+            {topbarMenu === "theme" && (
+              <div className="top-nav-popover" role="menu" aria-label={t.theme}>
+                <button
+                  type="button"
+                  className={themeMode === "system" ? "is-active" : ""}
+                  onClick={() => {
+                    setThemeMode("system");
+                    setTopbarMenu(null);
+                  }}
+                >
+                  <span>{t.system}</span>
+                  {themeMode === "system" && <span aria-hidden="true">•</span>}
+                </button>
+                <button
+                  type="button"
+                  className={themeMode === "light" ? "is-active" : ""}
+                  onClick={() => {
+                    setThemeMode("light");
+                    setTopbarMenu(null);
+                  }}
+                >
+                  <span>{t.light}</span>
+                  {themeMode === "light" && <span aria-hidden="true">•</span>}
+                </button>
+                <button
+                  type="button"
+                  className={themeMode === "dark" ? "is-active" : ""}
+                  onClick={() => {
+                    setThemeMode("dark");
+                    setTopbarMenu(null);
+                  }}
+                >
+                  <span>{t.dark}</span>
+                  {themeMode === "dark" && <span aria-hidden="true">•</span>}
+                </button>
+              </div>
+            )}
+          </div>
 
-        {currentUser ? (
-          <button type="button" onClick={logout}>
-            {t.logout}
-          </button>
-        ) : (
-          <button type="button" onClick={() => setIsAuthOpen(true)}>
-            {t.login}
-          </button>
-        )}
+          <div className="top-nav-menu-group">
+            <button
+              type="button"
+              className="nav-icon-button"
+              aria-label={`${t.language}: ${language === "zh" ? "中文" : "English"}`}
+              aria-expanded={topbarMenu === "language"}
+              aria-haspopup="menu"
+              onClick={() =>
+                setTopbarMenu((current) => (current === "language" ? null : "language"))
+              }
+            >
+              <GlobeIcon />
+            </button>
+
+            {topbarMenu === "language" && (
+              <div className="top-nav-popover" role="menu" aria-label={t.language}>
+                <button
+                  type="button"
+                  className={language === "zh" ? "is-active" : ""}
+                  onClick={() => {
+                    setLanguage("zh");
+                    setTopbarMenu(null);
+                  }}
+                >
+                  <span>中文</span>
+                  {language === "zh" && <span aria-hidden="true">•</span>}
+                </button>
+                <button
+                  type="button"
+                  className={language === "en" ? "is-active" : ""}
+                  onClick={() => {
+                    setLanguage("en");
+                    setTopbarMenu(null);
+                  }}
+                >
+                  <span>English</span>
+                  {language === "en" && <span aria-hidden="true">•</span>}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {currentUser ? (
+            <button type="button" className="nav-login-button" onClick={logout}>
+              {currentUserName === t.guest ? t.logout : `${currentUserName} · ${t.logout}`}
+            </button>
+          ) : (
+            <button type="button" className="nav-login-button" onClick={() => setIsAuthOpen(true)}>
+              {t.login}
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -1709,6 +1821,91 @@ function App() {
       )}
       {authDialog}
     </main>
+  );
+}
+
+function BrandMark() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="16" fill="currentColor" />
+      <path
+        d="M10.5 13.5C12.2 16.3 14.1 17.8 16 17.8C17.9 17.8 19.8 16.3 21.5 13.5"
+        fill="none"
+        stroke="#ffffff"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function ThemeIcon({ themeMode }: { themeMode: ThemeMode }) {
+  if (themeMode === "dark") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M14.8 3.4a8.7 8.7 0 1 0 5.8 15.2A9.4 9.4 0 0 1 14.8 3.4Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r="4.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 2.8v2.3M12 18.9v2.3M21.2 12h-2.3M5.1 12H2.8M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6M18.5 18.5l-1.6-1.6M7.1 7.1 5.5 5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      {themeMode === "system" && (
+        <path
+          d="M16.9 16.9 21 21"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+      )}
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r="8.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M3.9 9.1h16.2M3.9 14.9h16.2M12 3.7c2.2 2.2 3.5 5.2 3.5 8.3S14.2 18.1 12 20.3M12 3.7C9.8 5.9 8.5 8.9 8.5 12s1.3 6.1 3.5 8.3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+    </svg>
   );
 }
 
