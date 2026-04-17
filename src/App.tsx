@@ -17,6 +17,7 @@ type ApplicationStatus =
 type MaterialStatus = "未开始" | "准备中" | "已提交" | "需补充";
 type Priority = "高" | "中" | "低";
 type BoardView = "all" | "upcoming" | "active" | "offer";
+type AuthMode = "login" | "register";
 
 type MaterialItem = {
   id: string;
@@ -51,6 +52,21 @@ type JobApplication = {
 type ApplicationForm = Omit<JobApplication, "id">;
 
 const STORAGE_KEY = "campus-application-board-v1";
+const AUTH_USERS_KEY = "campus-application-board-users-v1";
+const AUTH_SESSION_KEY = "campus-application-board-session-v1";
+const DETAIL_HASH_PREFIX = "#application-";
+
+type StoredUser = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+type AuthForm = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 const statuses: Array<{
   id: ApplicationStatus;
@@ -379,13 +395,52 @@ const escapeCalendarText = (value: string) =>
     .replaceAll(",", "\\,")
     .replaceAll("\n", "\\n");
 
+const readStoredUsers = () => {
+  try {
+    const stored = localStorage.getItem(AUTH_USERS_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? (parsed as StoredUser[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getDetailApplicationIdFromHash = () => {
+  if (!window.location.hash.startsWith(DETAIL_HASH_PREFIX)) {
+    return null;
+  }
+
+  return decodeURIComponent(window.location.hash.slice(DETAIL_HASH_PREFIX.length));
+};
+
+const clearDetailHash = () => {
+  if (!window.location.hash.startsWith(DETAIL_HASH_PREFIX)) {
+    return;
+  }
+
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+};
+
 function App() {
+  const [users, setUsers] = useState<StoredUser[]>(readStoredUsers);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(() =>
+    localStorage.getItem(AUTH_SESSION_KEY),
+  );
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authForm, setAuthForm] = useState<AuthForm>({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [authError, setAuthError] = useState("");
   const [applications, setApplications] = useState<JobApplication[]>(readStoredApplications);
   const [form, setForm] = useState<ApplicationForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [detailApplicationId, setDetailApplicationId] = useState<string | null>(null);
+  const [detailApplicationId, setDetailApplicationId] = useState<string | null>(
+    getDetailApplicationIdFromHash,
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [sortByDeadline, setSortByDeadline] = useState(true);
+  const [sortByDeadline, setSortByDeadline] = useState(false);
   const [boardView, setBoardView] = useState<BoardView>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<Priority | typeof allFilterOption>(
@@ -401,6 +456,91 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
   }, [applications]);
+
+  useEffect(() => {
+    localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    const syncDetailRoute = () => {
+      setDetailApplicationId(getDetailApplicationIdFromHash());
+    };
+
+    window.addEventListener("hashchange", syncDetailRoute);
+    syncDetailRoute();
+
+    return () => window.removeEventListener("hashchange", syncDetailRoute);
+  }, []);
+
+  const currentUser =
+    users.find((user) => user.email === sessionEmail?.toLowerCase()) || null;
+
+  const handleAuthSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = authForm.email.trim().toLowerCase();
+    const password = authForm.password.trim();
+    const name = authForm.name.trim();
+
+    if (!email || !password || (authMode === "register" && !name)) {
+      setAuthError("请填写完整信息。");
+      return;
+    }
+
+    if (authMode === "register") {
+      if (users.some((user) => user.email === email)) {
+        setAuthError("这个邮箱已经注册，请直接登录。");
+        return;
+      }
+
+      const nextUser = { name, email, password };
+      setUsers((current) => [...current, nextUser]);
+      localStorage.setItem(AUTH_SESSION_KEY, email);
+      setSessionEmail(email);
+      setAuthError("");
+      setAuthForm({ name: "", email: "", password: "" });
+      return;
+    }
+
+    const matchedUser = users.find(
+      (user) => user.email === email && user.password === password,
+    );
+
+    if (!matchedUser) {
+      setAuthError("邮箱或密码不正确。");
+      return;
+    }
+
+    localStorage.setItem(AUTH_SESSION_KEY, matchedUser.email);
+    setSessionEmail(matchedUser.email);
+    setAuthError("");
+    setAuthForm({ name: "", email: "", password: "" });
+  };
+
+  const loginAsGuest = () => {
+    const guestUser = {
+      name: "访客",
+      email: "guest@local",
+      password: "guest",
+    };
+
+    setUsers((current) =>
+      current.some((user) => user.email === guestUser.email)
+        ? current
+        : [...current, guestUser],
+    );
+    localStorage.setItem(AUTH_SESSION_KEY, guestUser.email);
+    setSessionEmail(guestUser.email);
+    setAuthError("");
+    setAuthForm({ name: "", email: "", password: "" });
+  };
+
+  const logout = () => {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    setSessionEmail(null);
+    setDetailApplicationId(null);
+    setIsFormOpen(false);
+    clearDetailHash();
+  };
 
   const selectedApplication =
     applications.find((application) => application.id === detailApplicationId) || null;
@@ -492,8 +632,11 @@ function App() {
   const switchBoardView = (view: BoardView) => {
     setBoardView(view);
     setDetailApplicationId(null);
+    clearDetailHash();
     window.setTimeout(() => {
-      document.querySelector(".board")?.scrollIntoView({ behavior: "smooth" });
+      document
+        .querySelector(".board, .deadline-list")
+        ?.scrollIntoView({ behavior: "smooth" });
     }, 0);
   };
 
@@ -566,6 +709,7 @@ function App() {
     setApplications((current) => current.filter((application) => application.id !== id));
     if (detailApplicationId === id) {
       setDetailApplicationId(null);
+      clearDetailHash();
     }
     if (editingId === id) {
       closeForm();
@@ -732,8 +876,122 @@ function App() {
   const openApplicationDetail = (applicationId: string) => {
     setDetailApplicationId(applicationId);
     setIsFormOpen(false);
+    window.location.hash = `${DETAIL_HASH_PREFIX}${encodeURIComponent(applicationId)}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const renderApplicationCard = (application: JobApplication) => (
+    <article
+      className={`application-card priority-${application.priority}`}
+      key={application.id}
+      role="button"
+      tabIndex={0}
+      onClick={() => openApplicationDetail(application.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openApplicationDetail(application.id);
+        }
+      }}
+    >
+      <div
+        className="card-heading drag-handle"
+        draggable
+        onDragStart={() => setDraggedId(application.id)}
+        onDragEnd={() => setDraggedId(null)}
+        title="拖拽到其他状态列"
+      >
+        <div>
+          <h3>{application.company}</h3>
+          <p>{application.role}</p>
+        </div>
+        <span className="priority-badge">{application.priority}</span>
+      </div>
+
+      <dl className="card-details">
+        <div>
+          <dt>截止日期</dt>
+          <dd>
+            <span
+              className={getDaysUntil(application.deadline) <= 3 ? "deadline hot" : "deadline"}
+            >
+              {application.deadline}
+            </span>
+            <small>{formatDeadline(application.deadline)}</small>
+          </dd>
+        </div>
+        <div>
+          <dt>材料状态</dt>
+          <dd>{application.materialStatus}</dd>
+        </div>
+        <div>
+          <dt>当前进度</dt>
+          <dd>{application.progress}</dd>
+        </div>
+        <div>
+          <dt>备注</dt>
+          <dd>{application.notes || "暂无备注"}</dd>
+        </div>
+      </dl>
+
+      <div className="card-actions">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            moveApplication(application.id, -1);
+          }}
+        >
+          前移
+        </button>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            moveApplication(application.id, 1);
+          }}
+        >
+          后移
+        </button>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            openEditForm(application);
+          }}
+        >
+          编辑
+        </button>
+        <button
+          type="button"
+          className="danger-button"
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteApplication(application.id);
+          }}
+        >
+          删除
+        </button>
+      </div>
+    </article>
+  );
+
+  if (!currentUser) {
+    return (
+      <AuthScreen
+        mode={authMode}
+        form={authForm}
+        error={authError}
+        onModeChange={(mode) => {
+          setAuthMode(mode);
+          setAuthError("");
+        }}
+        onFormChange={setAuthForm}
+        onSubmit={handleAuthSubmit}
+        onGuestLogin={loginAsGuest}
+      />
+    );
+  }
 
   if (selectedApplication) {
     const materialProgress = getMaterialProgress(selectedApplication.materials);
@@ -743,7 +1001,13 @@ function App() {
         <button
           type="button"
           className="back-button"
-          onClick={() => setDetailApplicationId(null)}
+          onClick={() => {
+            if (window.location.hash.startsWith(DETAIL_HASH_PREFIX)) {
+              window.history.back();
+              return;
+            }
+            setDetailApplicationId(null);
+          }}
         >
           返回看板
         </button>
@@ -891,6 +1155,12 @@ function App() {
           <p className="subtitle">
             统一管理岗位截止日期、材料状态和面试进度。
           </p>
+          <div className="user-session">
+            <span>{currentUser.name}</span>
+            <button type="button" onClick={logout}>
+              退出登录
+            </button>
+          </div>
         </div>
 
         <div className="campus-photo">
@@ -953,7 +1223,7 @@ function App() {
             {boardView === "upcoming" ? "显示全部" : "筛选即将截止"}
           </button>
           <button type="button" className="filter-button" onClick={exportCalendarEvents}>
-            打开日历
+            添加到日历
           </button>
         </div>
 
@@ -999,14 +1269,13 @@ function App() {
             </select>
           </label>
 
-          <label className="switch-control">
-            <input
-              type="checkbox"
-              checked={sortByDeadline}
-              onChange={(event) => setSortByDeadline(event.target.checked)}
-            />
-            <span>按截止日期排序</span>
-          </label>
+          <button
+            type="button"
+            className={sortByDeadline ? "filter-button is-active" : "filter-button"}
+            onClick={() => setSortByDeadline((current) => !current)}
+          >
+            {sortByDeadline ? "返回状态看板" : "按截止日期排序"}
+          </button>
         </div>
       </section>
       {feedbackMessage && <p className="feedback-message">{feedbackMessage}</p>}
@@ -1023,125 +1292,51 @@ function App() {
         )}
       </section>
 
-      <section className="board" aria-label="申请状态看板">
-        {statuses.map((status) => (
-          <section
-            className="board-column"
-            key={status.id}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={() => handleDrop(status.id)}
-            aria-label={status.title}
-          >
-            <div className="column-header">
-              <div>
-                <p>{status.shortTitle}</p>
-                <h2>{status.title}</h2>
+      {sortByDeadline ? (
+        <section className="deadline-list" aria-label="按截止日期排序">
+          <div className="column-header">
+            <div>
+              <p>DDL</p>
+              <h2>按截止日期排序</h2>
+            </div>
+            <span>{visibleApplications.length}</span>
+          </div>
+          <div className="deadline-card-list">
+            {visibleApplications.map(renderApplicationCard)}
+            {visibleApplications.length === 0 && (
+              <div className="empty-state">暂无符合条件的申请</div>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section className="board" aria-label="申请状态看板">
+          {statuses.map((status) => (
+            <section
+              className="board-column"
+              key={status.id}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => handleDrop(status.id)}
+              aria-label={status.title}
+            >
+              <div className="column-header">
+                <div>
+                  <p>{status.shortTitle}</p>
+                  <h2>{status.title}</h2>
+                </div>
+                <span>{groupedApplications[status.id].length}</span>
               </div>
-              <span>{groupedApplications[status.id].length}</span>
-            </div>
 
-            <div className="card-list">
-              {groupedApplications[status.id].map((application) => (
-                <article
-                  className={`application-card priority-${application.priority}`}
-                  key={application.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openApplicationDetail(application.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openApplicationDetail(application.id);
-                    }
-                  }}
-                >
-                  <div
-                    className="card-heading drag-handle"
-                    draggable
-                    onDragStart={() => setDraggedId(application.id)}
-                    onDragEnd={() => setDraggedId(null)}
-                    title="拖拽到其他状态列"
-                  >
-                    <div>
-                      <h3>{application.company}</h3>
-                      <p>{application.role}</p>
-                    </div>
-                    <span className="priority-badge">{application.priority}</span>
-                  </div>
+              <div className="card-list">
+                {groupedApplications[status.id].map(renderApplicationCard)}
 
-                  <dl className="card-details">
-                    <div>
-                      <dt>截止日期</dt>
-                      <dd>
-                        <span className={getDaysUntil(application.deadline) <= 3 ? "deadline hot" : "deadline"}>
-                          {application.deadline}
-                        </span>
-                        <small>{formatDeadline(application.deadline)}</small>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>材料状态</dt>
-                      <dd>{application.materialStatus}</dd>
-                    </div>
-                    <div>
-                      <dt>当前进度</dt>
-                      <dd>{application.progress}</dd>
-                    </div>
-                    <div>
-                      <dt>备注</dt>
-                      <dd>{application.notes || "暂无备注"}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="card-actions">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        moveApplication(application.id, -1);
-                      }}
-                    >
-                      前移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        moveApplication(application.id, 1);
-                      }}
-                    >
-                      后移
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openEditForm(application);
-                      }}
-                    >
-                      编辑
-                    </button>
-                    <button
-                      type="button"
-                      className="danger-button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        deleteApplication(application.id);
-                      }}
-                    >
-                      删除
-                    </button>
-                  </div>
-                </article>
-              ))}
-
-              {groupedApplications[status.id].length === 0 && (
-                <div className="empty-state">暂无{status.title}申请</div>
-              )}
-            </div>
-          </section>
-        ))}
-      </section>
+                {groupedApplications[status.id].length === 0 && (
+                  <div className="empty-state">暂无{status.title}申请</div>
+                )}
+              </div>
+            </section>
+          ))}
+        </section>
+      )}
 
       {isFormOpen && (
         <ApplicationFormPanel
@@ -1165,6 +1360,109 @@ const statusTitles = statuses.reduce(
   (acc, status) => ({ ...acc, [status.id]: status.title }),
   {} as Record<ApplicationStatus, string>,
 );
+
+type AuthScreenProps = {
+  mode: AuthMode;
+  form: AuthForm;
+  error: string;
+  onModeChange: (mode: AuthMode) => void;
+  onFormChange: Dispatch<SetStateAction<AuthForm>>;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onGuestLogin: () => void;
+};
+
+function AuthScreen({
+  mode,
+  form,
+  error,
+  onModeChange,
+  onFormChange,
+  onSubmit,
+  onGuestLogin,
+}: AuthScreenProps) {
+  const isRegister = mode === "register";
+
+  return (
+    <main className="auth-shell">
+      <section className="auth-panel" aria-labelledby="auth-title">
+        <div>
+          <p className="eyebrow">校园招聘</p>
+          <h1 id="auth-title">求职申请管理看板</h1>
+          <p className="subtitle">登录后管理岗位、DDL、面试流程和日历提醒。</p>
+        </div>
+
+        <div className="auth-tabs" aria-label="登录方式">
+          <button
+            type="button"
+            className={mode === "login" ? "is-active" : ""}
+            onClick={() => onModeChange("login")}
+          >
+            登录
+          </button>
+          <button
+            type="button"
+            className={mode === "register" ? "is-active" : ""}
+            onClick={() => onModeChange("register")}
+          >
+            注册
+          </button>
+        </div>
+
+        <form className="auth-form" onSubmit={onSubmit}>
+          {isRegister && (
+            <label>
+              昵称
+              <input
+                value={form.name}
+                onChange={(event) =>
+                  onFormChange((current) => ({ ...current, name: event.target.value }))
+                }
+                placeholder="例如：小徐"
+              />
+            </label>
+          )}
+
+          <label>
+            邮箱
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) =>
+                onFormChange((current) => ({ ...current, email: event.target.value }))
+              }
+              placeholder="name@example.com"
+            />
+          </label>
+
+          <label>
+            密码
+            <input
+              type="password"
+              value={form.password}
+              onChange={(event) =>
+                onFormChange((current) => ({ ...current, password: event.target.value }))
+              }
+              placeholder="请输入密码"
+            />
+          </label>
+
+          {error && <p className="auth-error">{error}</p>}
+
+          <button type="submit" className="primary-button">
+            {isRegister ? "注册并进入" : "登录"}
+          </button>
+          <button type="button" className="guest-button" onClick={onGuestLogin}>
+            访客登录
+          </button>
+        </form>
+
+        <p className="auth-note">
+          当前版本使用浏览器本地登录，数据保存在这台设备的 localStorage。
+        </p>
+      </section>
+    </main>
+  );
+}
 
 type ApplicationFormPanelProps = {
   editingId: string | null;

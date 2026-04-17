@@ -97,6 +97,95 @@ h1 {
   font-size: 1.05rem;
 }
 
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 246, 242, 0.98)),
+    #f4f6f2;
+}
+
+.auth-panel {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 18px;
+  border: 1px solid #d8dfd3;
+  border-radius: 8px;
+  padding: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(28, 39, 32, 0.08);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.auth-tabs button,
+.guest-button,
+.user-session button {
+  border: 1px solid #cbd5cd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #26312b;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.auth-tabs button.is-active {
+  border-color: #0f766e;
+  background: #edf4ef;
+  color: #0f766e;
+}
+
+.auth-form {
+  padding: 0;
+}
+
+.auth-error {
+  margin: 0;
+  border: 1px solid #f1b6b6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff5f5;
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.auth-note {
+  margin: 0;
+  color: #75817a;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.user-session {
+  width: fit-content;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+  border: 1px solid #d8dfd3;
+  border-radius: 8px;
+  padding: 6px;
+  background: #f8faf7;
+}
+
+.user-session span {
+  color: #0f766e;
+  font-size: 0.88rem;
+  font-weight: 850;
+  padding: 0 8px;
+}
+
+.user-session button {
+  padding: 6px 9px;
+  font-size: 0.82rem;
+}
+
 .campus-photo {
   height: 190px;
   min-height: 160px;
@@ -292,6 +381,20 @@ h1 {
   border: 1px solid #d8dfd3;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.deadline-list {
+  margin-top: 18px;
+  border: 1px solid #d8dfd3;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.deadline-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 12px;
 }
 
 .column-header {
