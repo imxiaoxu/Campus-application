@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 type ApplicationStatus =
   | "draft"
@@ -10,12 +10,19 @@ type ApplicationStatus =
 type MaterialStatus = "未开始" | "准备中" | "已提交" | "需补充";
 type Priority = "高" | "中" | "低";
 
+type MaterialItem = {
+  id: string;
+  label: string;
+  completed: boolean;
+};
+
 type JobApplication = {
   id: string;
   company: string;
   role: string;
   deadline: string;
   materialStatus: MaterialStatus;
+  materials: MaterialItem[];
   progress: string;
   priority: Priority;
   notes: string;
@@ -40,11 +47,23 @@ const statuses: Array<{
 
 const materialOptions: MaterialStatus[] = ["未开始", "准备中", "已提交", "需补充"];
 const priorityOptions: Priority[] = ["高", "中", "低"];
+const allFilterOption = "全部";
 
-const statusTitles = statuses.reduce(
-  (acc, status) => ({ ...acc, [status.id]: status.title }),
-  {} as Record<ApplicationStatus, string>,
-);
+const defaultMaterialTemplates = [
+  "中文简历",
+  "英文简历",
+  "成绩单",
+  "作品集",
+  "推荐信",
+  "网申问题",
+];
+
+const createDefaultMaterials = (completed = false): MaterialItem[] =>
+  defaultMaterialTemplates.map((label) => ({
+    id: label,
+    label,
+    completed,
+  }));
 
 const addDays = (days: number) => {
   const date = new Date();
@@ -57,6 +76,7 @@ const emptyForm = (): ApplicationForm => ({
   role: "",
   deadline: addDays(14),
   materialStatus: "准备中",
+  materials: createDefaultMaterials(),
   progress: "梳理岗位要求",
   priority: "中",
   notes: "",
@@ -70,6 +90,9 @@ const seedApplications: JobApplication[] = [
     role: "产品运营实习生",
     deadline: addDays(3),
     materialStatus: "准备中",
+    materials: createDefaultMaterials().map((item) =>
+      item.label === "中文简历" ? { ...item, completed: true } : item,
+    ),
     progress: "等待简历终稿",
     priority: "高",
     notes: "补充校园社团增长项目数据。",
@@ -81,6 +104,7 @@ const seedApplications: JobApplication[] = [
     role: "前端开发校招",
     deadline: addDays(9),
     materialStatus: "已提交",
+    materials: createDefaultMaterials(true),
     progress: "等待笔试通知",
     priority: "高",
     notes: "复习浏览器、React 和算法高频题。",
@@ -92,6 +116,9 @@ const seedApplications: JobApplication[] = [
     role: "金融科技管培生",
     deadline: addDays(5),
     materialStatus: "已提交",
+    materials: createDefaultMaterials(true).map((item) =>
+      item.label === "推荐信" ? { ...item, completed: false } : item,
+    ),
     progress: "一面已约",
     priority: "中",
     notes: "准备银行数字化案例。",
@@ -103,6 +130,7 @@ const seedApplications: JobApplication[] = [
     role: "软件测试工程师",
     deadline: addDays(18),
     materialStatus: "已提交",
+    materials: createDefaultMaterials(true),
     progress: "已收到录用意向",
     priority: "中",
     notes: "确认三方协议时间。",
@@ -114,6 +142,11 @@ const seedApplications: JobApplication[] = [
     role: "用户研究实习生",
     deadline: addDays(-2),
     materialStatus: "需补充",
+    materials: createDefaultMaterials().map((item) =>
+      item.label === "中文简历" || item.label === "作品集"
+        ? { ...item, completed: true }
+        : item,
+    ),
     progress: "流程结束",
     priority: "低",
     notes: "复盘作品集呈现方式。",
@@ -129,6 +162,58 @@ const createId = () => {
   return `application-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
+const normalizeMaterials = (materials: unknown, completed = false): MaterialItem[] => {
+  if (!Array.isArray(materials)) {
+    return createDefaultMaterials(completed);
+  }
+
+  const normalized = materials
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const material = item as Partial<MaterialItem>;
+      if (!material.label) {
+        return null;
+      }
+
+      return {
+        id: material.id || material.label,
+        label: material.label,
+        completed: Boolean(material.completed),
+      };
+    })
+    .filter((item): item is MaterialItem => Boolean(item));
+
+  return normalized.length > 0 ? normalized : createDefaultMaterials(completed);
+};
+
+const normalizeApplication = (application: Partial<JobApplication>): JobApplication => {
+  const materialStatus = materialOptions.includes(application.materialStatus as MaterialStatus)
+    ? (application.materialStatus as MaterialStatus)
+    : "准备中";
+  const status = statuses.some((item) => item.id === application.status)
+    ? (application.status as ApplicationStatus)
+    : "draft";
+  const priority = priorityOptions.includes(application.priority as Priority)
+    ? (application.priority as Priority)
+    : "中";
+
+  return {
+    id: application.id || createId(),
+    company: application.company || "未命名公司",
+    role: application.role || "未命名岗位",
+    deadline: application.deadline || addDays(14),
+    materialStatus,
+    materials: normalizeMaterials(application.materials, materialStatus === "已提交"),
+    progress: application.progress || "待更新",
+    priority,
+    notes: application.notes || "",
+    status,
+  };
+};
+
 const readStoredApplications = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -137,7 +222,9 @@ const readStoredApplications = () => {
     }
 
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? (parsed as JobApplication[]) : seedApplications;
+    return Array.isArray(parsed)
+      ? (parsed as Partial<JobApplication>[]).map(normalizeApplication)
+      : seedApplications;
   } catch {
     return seedApplications;
   }
@@ -174,6 +261,15 @@ const isUpcoming = (application: JobApplication) => {
 const getStatusIndex = (status: ApplicationStatus) =>
   statuses.findIndex((item) => item.id === status);
 
+const getMaterialProgress = (materials: MaterialItem[]) => {
+  const completed = materials.filter((item) => item.completed).length;
+  return {
+    completed,
+    total: materials.length,
+    label: `${completed}/${materials.length}`,
+  };
+};
+
 function App() {
   const [applications, setApplications] = useState<JobApplication[]>(readStoredApplications);
   const [form, setForm] = useState<ApplicationForm>(emptyForm);
@@ -181,6 +277,15 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sortByDeadline, setSortByDeadline] = useState(true);
   const [showUpcomingOnly, setShowUpcomingOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState<Priority | typeof allFilterOption>(
+    allFilterOption,
+  );
+  const [materialFilter, setMaterialFilter] = useState<
+    MaterialStatus | typeof allFilterOption
+  >(allFilterOption);
+  const [customMaterialLabel, setCustomMaterialLabel] = useState("");
+  const [importFeedback, setImportFeedback] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -188,9 +293,30 @@ function App() {
   }, [applications]);
 
   const visibleApplications = useMemo(() => {
-    const filtered = showUpcomingOnly
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const filtered = (showUpcomingOnly
       ? applications.filter(isUpcoming)
-      : applications;
+      : applications
+    ).filter((application) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        [
+          application.company,
+          application.role,
+          application.progress,
+          application.notes,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearch);
+      const matchesPriority =
+        priorityFilter === allFilterOption || application.priority === priorityFilter;
+      const matchesMaterial =
+        materialFilter === allFilterOption ||
+        application.materialStatus === materialFilter;
+
+      return matchesSearch && matchesPriority && matchesMaterial;
+    });
 
     if (!sortByDeadline) {
       return filtered;
@@ -201,7 +327,14 @@ function App() {
         new Date(`${a.deadline}T00:00:00`).getTime() -
         new Date(`${b.deadline}T00:00:00`).getTime(),
     );
-  }, [applications, showUpcomingOnly, sortByDeadline]);
+  }, [
+    applications,
+    materialFilter,
+    priorityFilter,
+    searchTerm,
+    showUpcomingOnly,
+    sortByDeadline,
+  ]);
 
   const groupedApplications = useMemo(() => {
     return statuses.reduce(
@@ -216,6 +349,17 @@ function App() {
   }, [visibleApplications]);
 
   const metrics = useMemo(() => {
+    const materialTotals = applications.reduce(
+      (acc, application) => {
+        const progress = getMaterialProgress(application.materials);
+        return {
+          completed: acc.completed + progress.completed,
+          total: acc.total + progress.total,
+        };
+      },
+      { completed: 0, total: 0 },
+    );
+
     return {
       total: applications.length,
       upcoming: applications.filter(isUpcoming).length,
@@ -223,12 +367,17 @@ function App() {
         (item) => item.status !== "offer" && item.status !== "rejected",
       ).length,
       offers: applications.filter((item) => item.status === "offer").length,
+      materials:
+        materialTotals.total === 0
+          ? "0%"
+          : `${Math.round((materialTotals.completed / materialTotals.total) * 100)}%`,
     };
   }, [applications]);
 
   const openCreateForm = () => {
     setForm(emptyForm());
     setEditingId(null);
+    setCustomMaterialLabel("");
     setIsFormOpen(true);
   };
 
@@ -236,12 +385,14 @@ function App() {
     const { id: _id, ...formValue } = application;
     setForm(formValue);
     setEditingId(application.id);
+    setCustomMaterialLabel("");
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
     setForm(emptyForm());
     setEditingId(null);
+    setCustomMaterialLabel("");
     setIsFormOpen(false);
   };
 
@@ -253,11 +404,17 @@ function App() {
       role: form.role.trim(),
       progress: form.progress.trim(),
       notes: form.notes.trim(),
+      materials: form.materials.map((item) => ({
+        ...item,
+        label: item.label.trim(),
+      })),
     };
 
     if (!normalizedForm.company || !normalizedForm.role) {
       return;
     }
+
+    normalizedForm.materials = normalizedForm.materials.filter((item) => item.label);
 
     if (editingId) {
       setApplications((current) =>
@@ -290,6 +447,114 @@ function App() {
         application.id === id ? { ...application, status } : application,
       ),
     );
+  };
+
+  const toggleApplicationMaterial = (applicationId: string, materialId: string) => {
+    setApplications((current) =>
+      current.map((application) =>
+        application.id === applicationId
+          ? {
+              ...application,
+              materials: application.materials.map((material) =>
+                material.id === materialId
+                  ? { ...material, completed: !material.completed }
+                  : material,
+              ),
+            }
+          : application,
+      ),
+    );
+  };
+
+  const toggleFormMaterial = (materialId: string) => {
+    setForm((current) => ({
+      ...current,
+      materials: current.materials.map((material) =>
+        material.id === materialId
+          ? { ...material, completed: !material.completed }
+          : material,
+      ),
+    }));
+  };
+
+  const addCustomMaterial = () => {
+    const label = customMaterialLabel.trim();
+    if (!label) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      materials: [
+        ...current.materials,
+        {
+          id: `custom-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          label,
+          completed: false,
+        },
+      ],
+    }));
+    setCustomMaterialLabel("");
+  };
+
+  const removeFormMaterial = (materialId: string) => {
+    setForm((current) => ({
+      ...current,
+      materials: current.materials.filter((material) => material.id !== materialId),
+    }));
+  };
+
+  const exportApplications = () => {
+    const payload = JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        applications,
+      },
+      null,
+      2,
+    );
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `job-applications-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setImportFeedback("已导出当前申请数据。");
+  };
+
+  const importApplications = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        const rawApplications = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed.applications)
+            ? parsed.applications
+            : null;
+
+        if (!rawApplications) {
+          throw new Error("Invalid import file");
+        }
+
+        const imported = (rawApplications as Partial<JobApplication>[]).map(
+          normalizeApplication,
+        );
+        setApplications(imported);
+        setImportFeedback(`已导入 ${imported.length} 条申请数据。`);
+      } catch {
+        setImportFeedback("导入失败，请选择有效的申请数据 JSON 文件。");
+      } finally {
+        event.target.value = "";
+      }
+    };
+    reader.readAsText(file);
   };
 
   const moveApplication = (id: string, direction: -1 | 1) => {
@@ -348,6 +613,10 @@ function App() {
           <span>录用</span>
           <strong>{metrics.offers}</strong>
         </article>
+        <article className="metric">
+          <span>材料完成率</span>
+          <strong>{metrics.materials}</strong>
+        </article>
       </section>
 
       <section className="toolbar" aria-label="看板操作">
@@ -362,17 +631,68 @@ function App() {
           >
             {showUpcomingOnly ? "显示全部" : "筛选即将截止"}
           </button>
+          <button type="button" className="filter-button" onClick={exportApplications}>
+            导出数据
+          </button>
+          <label className="import-button">
+            导入数据
+            <input type="file" accept="application/json" onChange={importApplications} />
+          </label>
         </div>
 
-        <label className="switch-control">
-          <input
-            type="checkbox"
-            checked={sortByDeadline}
-            onChange={(event) => setSortByDeadline(event.target.checked)}
-          />
-          <span>按截止日期排序</span>
-        </label>
+        <div className="filter-grid">
+          <label>
+            搜索
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="公司、岗位、进度或备注"
+            />
+          </label>
+
+          <label>
+            优先级
+            <select
+              value={priorityFilter}
+              onChange={(event) =>
+                setPriorityFilter(event.target.value as Priority | typeof allFilterOption)
+              }
+            >
+              <option>{allFilterOption}</option>
+              {priorityOptions.map((priority) => (
+                <option key={priority}>{priority}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            材料状态
+            <select
+              value={materialFilter}
+              onChange={(event) =>
+                setMaterialFilter(
+                  event.target.value as MaterialStatus | typeof allFilterOption,
+                )
+              }
+            >
+              <option>{allFilterOption}</option>
+              {materialOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="switch-control">
+            <input
+              type="checkbox"
+              checked={sortByDeadline}
+              onChange={(event) => setSortByDeadline(event.target.checked)}
+            />
+            <span>按截止日期排序</span>
+          </label>
+        </div>
       </section>
+      {importFeedback && <p className="feedback-message">{importFeedback}</p>}
 
       <section className="board" aria-label="申请状态看板">
         {statuses.map((status) => (
@@ -396,11 +716,14 @@ function App() {
                 <article
                   className={`application-card priority-${application.priority}`}
                   key={application.id}
-                  draggable
-                  onDragStart={() => setDraggedId(application.id)}
-                  onDragEnd={() => setDraggedId(null)}
                 >
-                  <div className="card-heading">
+                  <div
+                    className="card-heading drag-handle"
+                    draggable
+                    onDragStart={() => setDraggedId(application.id)}
+                    onDragEnd={() => setDraggedId(null)}
+                    title="拖拽到其他状态列"
+                  >
                     <div>
                       <h3>{application.company}</h3>
                       <p>{application.role}</p>
@@ -420,7 +743,10 @@ function App() {
                     </div>
                     <div>
                       <dt>材料状态</dt>
-                      <dd>{application.materialStatus}</dd>
+                      <dd>
+                        {application.materialStatus}
+                        <small>清单 {getMaterialProgress(application.materials).label}</small>
+                      </dd>
                     </div>
                     <div>
                       <dt>当前进度</dt>
@@ -431,6 +757,26 @@ function App() {
                       <dd>{application.notes || "暂无备注"}</dd>
                     </div>
                   </dl>
+
+                  <div className="material-checklist" aria-label={`${application.company}材料清单`}>
+                    {application.materials.slice(0, 4).map((material) => (
+                      <label key={material.id} className="material-chip">
+                        <input
+                          type="checkbox"
+                          checked={material.completed}
+                          onChange={() =>
+                            toggleApplicationMaterial(application.id, material.id)
+                          }
+                        />
+                        <span>{material.label}</span>
+                      </label>
+                    ))}
+                    {application.materials.length > 4 && (
+                      <span className="more-materials">
+                        +{application.materials.length - 4} 项
+                      </span>
+                    )}
+                  </div>
 
                   <div className="card-actions">
                     <button type="button" onClick={() => moveApplication(application.id, -1)}>
@@ -577,6 +923,46 @@ function App() {
                   placeholder="例如：等待 HR 电话面试"
                 />
               </label>
+
+              <section className="form-section" aria-label="申请材料清单">
+                <div className="section-heading">
+                  <h3>申请材料 checklist</h3>
+                  <span>{getMaterialProgress(form.materials).label}</span>
+                </div>
+
+                <div className="form-material-list">
+                  {form.materials.map((material) => (
+                    <div className="form-material-item" key={material.id}>
+                      <label className="material-chip">
+                        <input
+                          type="checkbox"
+                          checked={material.completed}
+                          onChange={() => toggleFormMaterial(material.id)}
+                        />
+                        <span>{material.label}</span>
+                      </label>
+                      <button
+                        type="button"
+                        className="remove-material-button"
+                        onClick={() => removeFormMaterial(material.id)}
+                      >
+                        移除
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="add-material-row">
+                  <input
+                    value={customMaterialLabel}
+                    onChange={(event) => setCustomMaterialLabel(event.target.value)}
+                    placeholder="添加自定义材料"
+                  />
+                  <button type="button" onClick={addCustomMaterial}>
+                    添加
+                  </button>
+                </div>
+              </section>
 
               <label>
                 备注
