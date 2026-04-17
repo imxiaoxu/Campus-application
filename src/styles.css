@@ -188,7 +188,6 @@ h1 {
 }
 
 .filter-button,
-.import-button,
 .switch-control,
 .card-actions button,
 .form-actions button,
@@ -202,24 +201,8 @@ h1 {
 }
 
 .filter-button,
-.import-button,
 .form-actions button {
   padding: 10px 14px;
-}
-
-.import-button {
-  display: inline-grid;
-  place-items: center;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.import-button input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
 }
 
 .filter-button.is-active {
@@ -859,8 +842,7 @@ textarea {
     width: 100%;
   }
 
-  .toolbar-actions button,
-  .import-button {
+  .toolbar-actions button {
     flex: 1;
   }
 

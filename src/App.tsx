@@ -1,5 +1,4 @@
 import {
-  ChangeEvent,
   FormEvent,
   useEffect,
   useMemo,
@@ -396,7 +395,7 @@ function App() {
     MaterialStatus | typeof allFilterOption
   >(allFilterOption);
   const [customMaterialLabel, setCustomMaterialLabel] = useState("");
-  const [importFeedback, setImportFeedback] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -636,25 +635,6 @@ function App() {
     }));
   };
 
-  const exportApplications = () => {
-    const payload = JSON.stringify(
-      {
-        exportedAt: new Date().toISOString(),
-        applications,
-      },
-      null,
-      2,
-    );
-    const blob = new Blob([payload], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `job-applications-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setImportFeedback("已导出当前申请数据。");
-  };
-
   const exportCalendarEvents = () => {
     const timestamp = toCalendarTimestamp();
     const events = applications.flatMap((application) => {
@@ -724,43 +704,9 @@ function App() {
     }
 
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    setImportFeedback(
+    setFeedbackMessage(
       `已打开 ${events.length} 个日历事件。若浏览器未弹出日历，请在下载记录中打开 .ics 文件导入。`,
     );
-  };
-
-  const importApplications = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result));
-        const rawApplications = Array.isArray(parsed)
-          ? parsed
-          : Array.isArray(parsed.applications)
-            ? parsed.applications
-            : null;
-
-        if (!rawApplications) {
-          throw new Error("Invalid import file");
-        }
-
-        const imported = (rawApplications as Partial<JobApplication>[]).map(
-          normalizeApplication,
-        );
-        setApplications(imported);
-        setImportFeedback(`已导入 ${imported.length} 条申请数据。`);
-      } catch {
-        setImportFeedback("导入失败，请选择有效的申请数据 JSON 文件。");
-      } finally {
-        event.target.value = "";
-      }
-    };
-    reader.readAsText(file);
   };
 
   const moveApplication = (id: string, direction: -1 | 1) => {
@@ -1006,16 +952,9 @@ function App() {
           >
             {boardView === "upcoming" ? "显示全部" : "筛选即将截止"}
           </button>
-          <button type="button" className="filter-button" onClick={exportApplications}>
-            导出数据
-          </button>
           <button type="button" className="filter-button" onClick={exportCalendarEvents}>
             打开日历
           </button>
-          <label className="import-button">
-            导入数据
-            <input type="file" accept="application/json" onChange={importApplications} />
-          </label>
         </div>
 
         <div className="filter-grid">
@@ -1070,7 +1009,7 @@ function App() {
           </label>
         </div>
       </section>
-      {importFeedback && <p className="feedback-message">{importFeedback}</p>}
+      {feedbackMessage && <p className="feedback-message">{feedbackMessage}</p>}
 
       <section className="view-banner" aria-label="当前看板页面">
         <div>
