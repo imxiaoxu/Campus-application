@@ -1737,18 +1737,6 @@ function App() {
       </section>
       {feedbackMessage && <p className="feedback-message">{feedbackMessage}</p>}
 
-      <section className="view-banner" aria-label={t.currentPage}>
-        <div>
-          <span>{t.currentPage}</span>
-          <strong>{viewTitles[boardView]}</strong>
-        </div>
-        {boardView !== "all" && (
-          <button type="button" onClick={() => switchBoardView("all")}>
-            {t.backToAll}
-          </button>
-        )}
-      </section>
-
       {sortByDeadline ? (
         <section className="deadline-list" aria-label={t.deadlineSortTitle}>
           <div className="column-header">
