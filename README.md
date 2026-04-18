@@ -44,6 +44,10 @@ npm run build
 
 注意：它通常比 `vercel.app` 更省心，但依然不能保证中国大陆始终稳定。
 
+当前线上地址：
+
+- https://campus-application.pages.dev
+
 仓库已经内置这些 Cloudflare Pages 配置：
 
 - 配置文件 [wrangler.jsonc](/Users/bowenxu/Desktop/未命名文件夹%202/wrangler.jsonc#L1)
