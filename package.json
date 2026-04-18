@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "postbuild": "node scripts/prepare-static-host.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "cf:preview": "npm run build && npx wrangler pages dev dist",
+    "cf:deploy": "npm run build && npx wrangler pages deploy dist"
   },
   "dependencies": {
     "react": "^19.0.0",

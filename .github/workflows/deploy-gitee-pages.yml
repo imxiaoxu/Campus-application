@@ -1,0 +1,46 @@
+name: Deploy Gitee Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Publish dist to Gitee branch
+        env:
+          GITEE_REMOTE: https://${{ secrets.GITEE_USERNAME }}:${{ secrets.GITEE_TOKEN }}@gitee.com/${{ secrets.GITEE_REPO }}.git
+          TARGET_BRANCH: ${{ vars.GITEE_PAGES_BRANCH || 'gitee-pages' }}
+          GITEE_GIT_USER_NAME: ${{ vars.GITEE_GIT_USER_NAME || 'github-actions[bot]' }}
+          GITEE_GIT_USER_EMAIL: ${{ vars.GITEE_GIT_USER_EMAIL || '41898282+github-actions[bot]@users.noreply.github.com' }}
+        run: bash scripts/publish-gitee-pages.sh
+
+      - name: Trigger Gitee Pages rebuild
+        if: ${{ secrets.GITEE_PASSWORD != '' }}
+        uses: yanglbme/gitee-pages-action@main
+        with:
+          gitee-username: ${{ secrets.GITEE_USERNAME }}
+          gitee-password: ${{ secrets.GITEE_PASSWORD }}
+          gitee-repo: ${{ secrets.GITEE_REPO }}
+          branch: ${{ vars.GITEE_PAGES_BRANCH || 'gitee-pages' }}
